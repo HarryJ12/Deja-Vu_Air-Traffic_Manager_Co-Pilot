@@ -146,6 +146,12 @@ The product should feel closer to an operational command interface than a generi
 
 Push-to-talk only. No always-listening behavior.
 
+Voice architecture:
+
+- Operator input uses OpenAI Audio transcription.
+- Jarvis and agent output uses ElevenLabs text-to-speech.
+- Both providers must have mock fallbacks so the app still demos without live keys.
+
 Example commands:
 
 - "Jarvis, what am I missing?"

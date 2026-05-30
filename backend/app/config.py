@@ -23,11 +23,18 @@ def _load_dotenv() -> None:
 @dataclass(frozen=True)
 class Settings:
     data_bundle_path: Path | None
+    openai_api_key: str | None
     anthropic_api_key: str | None
     elevenlabs_api_key: str | None
+    openai_transcription_model: str
+    use_mock_transcription: bool
     use_mock_llm: bool
     use_mock_voice: bool
     cache_dir: Path
+
+    @property
+    def has_openai_transcription(self) -> bool:
+        return bool(self.openai_api_key) and not self.use_mock_transcription
 
     @property
     def has_anthropic(self) -> bool:
@@ -67,8 +74,11 @@ def get_settings() -> Settings:
     _load_dotenv()
     return Settings(
         data_bundle_path=discover_data_bundle(),
+        openai_api_key=os.getenv("OPENAI_API_KEY"),
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
         elevenlabs_api_key=os.getenv("ELEVENLABS_API_KEY"),
+        openai_transcription_model=os.getenv("OPENAI_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe"),
+        use_mock_transcription=_env_bool("USE_MOCK_TRANSCRIPTION", True),
         use_mock_llm=_env_bool("USE_MOCK_LLM", True),
         use_mock_voice=_env_bool("USE_MOCK_VOICE", True),
         cache_dir=REPO_ROOT / "data" / "cache",

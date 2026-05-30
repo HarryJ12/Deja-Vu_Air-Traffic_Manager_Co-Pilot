@@ -182,3 +182,11 @@ class VoiceSynthesisResponse(BaseModel):
     content_type: str
     audio_base64: str | None = None
     message: str
+
+
+class VoiceTranscriptionResponse(BaseModel):
+    mode: Literal["mock", "live"]
+    provider: Literal["openai"]
+    model: str
+    text: str
+    message: str

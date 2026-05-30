@@ -35,6 +35,8 @@ def create_app() -> FastAPI:
             "ok": True,
             "data_bundle_found": settings.data_bundle_path is not None,
             "data_bundle_path": str(settings.data_bundle_path) if settings.data_bundle_path else None,
+            "transcription_mode": "live" if settings.has_openai_transcription else "mock",
+            "transcription_model": settings.openai_transcription_model,
             "claude_mode": "live" if settings.has_anthropic else "mock",
             "voice_mode": "live" if settings.has_elevenlabs else "mock",
         }

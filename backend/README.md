@@ -6,16 +6,34 @@ FastAPI backend for DĒJÅ VŪ Intelligence.
 
 Required for full production behavior:
 
+- `OPENAI_API_KEY`: operator speech-to-text input through OpenAI transcription.
 - `ANTHROPIC_API_KEY`: Claude brief generation.
-- `ELEVENLABS_API_KEY`: voice synthesis.
+- `ELEVENLABS_API_KEY`: Jarvis and agent text-to-speech output.
 
 Optional for local development:
 
 - `HACKATHON_DATA_BUNDLE`: overrides data bundle path.
+- `OPENAI_TRANSCRIPTION_MODEL`: defaults to `gpt-4o-mini-transcribe`. Use `whisper-1` if classic Whisper is required.
+- `USE_MOCK_TRANSCRIPTION=true`: forces deterministic mock operator voice input.
 - `USE_MOCK_LLM=true`: forces deterministic mock briefings.
 - `USE_MOCK_VOICE=true`: forces mock voice responses.
 
-The backend runs without API keys. In that mode it uses deterministic mock briefings and voice placeholders.
+The backend runs without API keys. In that mode it uses deterministic mock transcription, briefings, and voice placeholders.
+
+## Voice Split
+
+Operator input:
+
+- `POST /api/voice/transcribe`
+- Provider: OpenAI Audio transcription
+- Default model: `gpt-4o-mini-transcribe`
+- Purpose: convert push-to-talk microphone audio into app commands such as "Jarvis, what am I missing?"
+
+Agent output:
+
+- `POST /api/voice/synthesize`
+- Provider: ElevenLabs
+- Purpose: speak Jarvis and agent briefing output back to the operator
 
 ## Local Data
 

@@ -633,6 +633,89 @@ MVP behavior:
 - Make the preview plausible and clearly labeled as a forecast simulation.
 - Do not claim real rerouting optimization unless implemented.
 
+### POST `/api/voice/transcribe`
+
+Used for operator push-to-talk input.
+
+Provider:
+
+- OpenAI Audio transcription
+
+Default model:
+
+- `gpt-4o-mini-transcribe`
+
+Environment:
+
+- `OPENAI_API_KEY`
+- `OPENAI_TRANSCRIPTION_MODEL`
+- `USE_MOCK_TRANSCRIPTION`
+
+Request:
+
+- `multipart/form-data`
+- field name: `audio`
+- accepted browser-friendly formats: `webm`, `wav`, `mp3`, `m4a`
+- maximum upload: 25 MB
+
+Response:
+
+```ts
+type VoiceTranscriptionResponse = {
+  mode: "mock" | "live";
+  provider: "openai";
+  model: string;
+  text: string;
+  message: string;
+};
+```
+
+Frontend behavior:
+
+- Record push-to-talk microphone input.
+- Upload the recording to `/api/voice/transcribe`.
+- Put the returned `text` into the command handler.
+- In mock mode, the backend returns a deterministic command such as "Jarvis, what am I missing?"
+
+### POST `/api/voice/synthesize`
+
+Used for Jarvis and agent spoken output.
+
+Provider:
+
+- ElevenLabs
+
+Environment:
+
+- `ELEVENLABS_API_KEY`
+- `USE_MOCK_VOICE`
+
+Request:
+
+```ts
+type VoiceSynthesisRequest = {
+  text: string;
+  voice_id?: string;
+};
+```
+
+Response:
+
+```ts
+type VoiceSynthesisResponse = {
+  mode: "mock" | "live";
+  content_type: string;
+  audio_base64: string | null;
+  message: string;
+};
+```
+
+Frontend behavior:
+
+- Send the agent briefing text to `/api/voice/synthesize`.
+- If `mode` is `live`, decode and play `audio_base64` using `content_type`.
+- If `mode` is `mock`, show the text and keep the UI functional.
+
 ## Frontend Layout
 
 Single-screen operational app. No marketing landing page.
