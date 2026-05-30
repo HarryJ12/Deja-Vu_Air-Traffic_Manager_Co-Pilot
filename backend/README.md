@@ -15,10 +15,10 @@ Optional for local development:
 - `HACKATHON_DATA_BUNDLE`: overrides data bundle path.
 - `OPENAI_TRANSCRIPTION_MODEL`: defaults to `gpt-4o-mini-transcribe`. Use `whisper-1` if classic Whisper is required.
 - `USE_MOCK_TRANSCRIPTION=true`: forces deterministic mock operator voice input.
-- `USE_MOCK_LLM=true`: forces deterministic mock briefings.
+- `USE_MOCK_LLM=true`: forces deterministic mock briefings and Jarvis replies.
 - `USE_MOCK_VOICE=true`: forces mock voice responses.
 
-The backend runs without API keys. In that mode it uses deterministic mock transcription, briefings, and voice placeholders.
+The backend runs without API keys. When a key is missing, that provider falls back to deterministic mock behavior. When keys are present, live transcription, Claude responses, and ElevenLabs output are enabled by default.
 
 ## Voice Split
 
@@ -42,6 +42,7 @@ Default operator chat:
 - `POST /api/chat/jarvis`
 - Only Jarvis replies.
 - Use this for the normal command surface outside the meeting room.
+- Frontend push-to-talk uses this endpoint after `POST /api/voice/transcribe`.
 
 Meeting room chat:
 

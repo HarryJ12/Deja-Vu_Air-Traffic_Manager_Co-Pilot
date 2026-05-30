@@ -3,6 +3,7 @@ from __future__ import annotations
 from app.core.schemas import ChatMessage, ChatResponse, ChatRequest, MeetingRoomChatRequest
 
 from .briefing_service import BriefingService
+from .ai_service import ClaudeBriefingService
 from .voice_service import VoiceService
 
 
@@ -10,13 +11,29 @@ class ChatService:
     def __init__(self, briefings: BriefingService | None = None, voices: VoiceService | None = None):
         self.briefings = briefings or BriefingService()
         self.voices = voices or VoiceService()
+        self.claude = ClaudeBriefingService()
 
     def jarvis_chat(self, request: ChatRequest) -> ChatResponse:
         briefing = self.briefings.briefing(request.scenario_id, request.time_bin_id)
-        content = f"{briefing.headline} {briefing.summary}"
+        content = self.claude.render_jarvis_response(
+            request.message,
+            briefing.headline,
+            briefing.summary,
+            briefing.primary_risk,
+            briefing.agents,
+            briefing.recommendations,
+        )
         return ChatResponse(
             room="jarvis",
             messages=[
+                ChatMessage(
+                    role="operator",
+                    agent=None,
+                    content=request.message,
+                    severity="info",
+                    voice_id=None,
+                    source="operator_voice",
+                ),
                 ChatMessage(
                     role="agent",
                     agent="Jarvis",

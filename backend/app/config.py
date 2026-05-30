@@ -86,8 +86,8 @@ def get_settings() -> Settings:
             "Domino": os.getenv("ELEVENLABS_VOICE_DOMINO", "tnVKC6NjwhdRxoQIfKue"),
             "Historian": os.getenv("ELEVENLABS_VOICE_HISTORIAN", "Ybqj6CIlqb6M85s9Bl4n"),
         },
-        use_mock_transcription=_env_bool("USE_MOCK_TRANSCRIPTION", True),
-        use_mock_llm=_env_bool("USE_MOCK_LLM", True),
-        use_mock_voice=_env_bool("USE_MOCK_VOICE", True),
+        use_mock_transcription=_env_bool("USE_MOCK_TRANSCRIPTION", False),
+        use_mock_llm=_env_bool("USE_MOCK_LLM", False),
+        use_mock_voice=_env_bool("USE_MOCK_VOICE", False),
         cache_dir=REPO_ROOT / "data" / "cache",
     )

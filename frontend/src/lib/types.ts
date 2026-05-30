@@ -334,3 +334,25 @@ export type AgentRosterResponse = {
   agents: AgentCard[];
   note: string;
 };
+
+export type VoiceTranscriptionResponse = {
+  mode: "mock" | "live";
+  provider: "openai";
+  model: string;
+  text: string;
+  message: string;
+};
+
+export type VoiceSynthesisRequest = {
+  text: string;
+  voice_id?: string | null;
+  agent?: AgentName;
+  meeting_room?: boolean;
+};
+
+export type VoiceSynthesisResponse = {
+  mode: "mock" | "live";
+  content_type: string;
+  audio_base64: string | null;
+  message: string;
+};

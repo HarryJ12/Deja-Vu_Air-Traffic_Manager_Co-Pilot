@@ -11,11 +11,15 @@ import type {
   ActionDecisionRequest,
   ActionDecisionResponse,
   AgentRosterResponse,
+  ChatRequest,
   ChatResponse,
   MeetingRoomChatRequest,
   MapInspectionResponse,
   FlightDetailResponse,
   SectorDetailResponse,
+  VoiceSynthesisRequest,
+  VoiceSynthesisResponse,
+  VoiceTranscriptionResponse,
 } from "./types";
 
 import scenariosMock from "../data/mock/scenarios.json";
@@ -49,6 +53,25 @@ async function post<T>(path: string, body: unknown, mock: T, ms = 600): Promise<
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
+  return (await res.json()) as T;
+}
+
+async function postLiveJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`/api${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
+  return (await res.json()) as T;
+}
+
+async function postLiveForm<T>(path: string, form: FormData): Promise<T> {
+  const res = await fetch(`/api${path}`, {
+    method: "POST",
+    body: form,
   });
   if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
   return (await res.json()) as T;
@@ -172,6 +195,19 @@ export const api = {
       req,
       meetingRoomMock as ChatResponse
     ),
+
+  jarvisChat: (req: ChatRequest) =>
+    postLiveJson<ChatResponse>("/chat/jarvis", req),
+
+  transcribeVoice: (audio: Blob) => {
+    const form = new FormData();
+    const extension = audio.type.includes("mp4") ? "mp4" : "webm";
+    form.append("audio", audio, `jarvis-input.${extension}`);
+    return postLiveForm<VoiceTranscriptionResponse>("/voice/transcribe", form);
+  },
+
+  synthesizeVoice: (req: VoiceSynthesisRequest) =>
+    postLiveJson<VoiceSynthesisResponse>("/voice/synthesize", req),
 
   inspectMap: (scenarioId: string, timeBinId: string, lat: number, lon: number, altitudeFt?: number) => {
     const params = new URLSearchParams({

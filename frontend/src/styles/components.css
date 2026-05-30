@@ -98,6 +98,48 @@
   background-color: var(--text-primary);
   color: var(--bg-base);
 }
+.voice-control {
+  position: relative;
+}
+.voice-status-card {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  max-height: 300px;
+  overflow: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-left: 2px solid var(--accent-red);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  z-index: 90;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+}
+.voice-state {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-red);
+  margin-bottom: 6px;
+}
+.voice-transcript,
+.voice-response,
+.voice-error {
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 6px;
+}
+.voice-transcript {
+  color: var(--text-secondary);
+}
+.voice-response {
+  color: var(--text-primary);
+}
+.voice-error {
+  color: var(--accent-red);
+}
 
 .btn {
   background-color: transparent;
