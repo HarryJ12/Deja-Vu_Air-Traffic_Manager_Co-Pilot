@@ -1,0 +1,12 @@
+.DS_Store
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Raw data should stay local. The backend can read it, but do not commit it.
+hackathon_data_bundle/
+Hackathon Data Bundle/
+data/cache/*
+!data/cache/.gitkeep
