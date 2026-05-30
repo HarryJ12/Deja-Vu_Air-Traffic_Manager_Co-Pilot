@@ -8,7 +8,7 @@ from app.config import get_settings
 from app.core.schemas import VoiceSynthesisResponse
 
 
-DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
+DEFAULT_VOICE_ID = "VtiJxTGG57AFTSQjMlja"
 
 
 class AgentVoiceNotAllowed(ValueError):
