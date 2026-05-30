@@ -75,7 +75,7 @@ ASI_Hack/
         risk_scoring.py
         recommendations.py
         historian.py
-        auditor.py
+        risko.py
       services/
         scenario_service.py
         briefing_service.py
@@ -554,7 +554,7 @@ type RiskSummary = {
 };
 
 type AgentFinding = {
-  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Auditor";
+  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Risko";
   severity: "info" | "watch" | "alert";
   title: string;
   detail: string;
@@ -750,7 +750,7 @@ type ChatResponse = {
 
 type ChatMessage = {
   role: "operator" | "agent";
-  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Auditor" | null;
+  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Risko" | null;
   content: string;
   severity: "info" | "watch" | "alert";
   voice_id: string | null;
@@ -765,7 +765,7 @@ Multi-agent room for direct conversation with the specialist agents.
 Behavior:
 
 - Jarvis moderates.
-- Weather Boy, Air Marshal, Domino, Historian, and Auditor can speak directly.
+- Weather Boy, Air Marshal, Domino, Historian, and Risko can speak directly.
 - Agent-specific ElevenLabs voices are enabled here only.
 - Frontend should visually separate this from the default tactical command channel.
 
@@ -774,7 +774,7 @@ Request:
 ```ts
 type MeetingRoomChatRequest = ChatRequest & {
   requested_agents?: Array<
-    "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Auditor"
+    "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Risko"
   >;
 };
 ```
@@ -787,7 +787,7 @@ ELEVENLABS_VOICE_WEATHER_BOY=
 ELEVENLABS_VOICE_AIR_MARSHAL=
 ELEVENLABS_VOICE_DOMINO=
 ELEVENLABS_VOICE_HISTORIAN=
-ELEVENLABS_VOICE_AUDITOR=
+ELEVENLABS_VOICE_RISKO=
 ```
 
 Frontend behavior:
@@ -893,7 +893,7 @@ Every async action needs:
 
 ### `AgentPanel`
 
-- Displays findings from Weather Boy, Air Marshal, Domino, Historian, and Auditor.
+- Displays findings from Weather Boy, Air Marshal, Domino, Historian, and Risko.
 - Use consistent agent rows, not decorative avatars.
 
 ### `RiskQueue`

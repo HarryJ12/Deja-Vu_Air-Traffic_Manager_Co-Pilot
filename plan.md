@@ -338,7 +338,7 @@ Purpose:
 
 - Trust building
 
-### Auditor
+### Risko
 
 Responsibilities:
 
@@ -357,7 +357,7 @@ Purpose:
 
 - Prevent overconfidence
 
-The Auditor exists to disagree.
+Risko exists to catch weak assumptions before the operator trusts a recommendation.
 
 ## Historical Intelligence And Time Warp
 
@@ -419,7 +419,7 @@ Purpose:
 
 Key differentiator.
 
-Historian identifies a similar scenario. Auditor continuously compares current conditions against historical precedent.
+Historian identifies a similar scenario. Risko continuously compares current conditions against historical precedent.
 
 Example:
 
@@ -617,7 +617,7 @@ This is intentionally simple and inspectable. Do not present it as FAA-grade pre
 5. Weather Boy explains weather contribution.
 6. Domino shows downstream consequences.
 7. Historian surfaces similar precedent.
-8. Auditor identifies uncertainty.
+8. Risko identifies uncertainty.
 9. Recommendations appear as action cards.
 10. Operator previews an action.
 11. Time Warp updates the forecast.

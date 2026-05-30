@@ -3,10 +3,10 @@ from __future__ import annotations
 from .schemas import AgentFinding, ConfidenceBlock, DivergenceAlarm, RiskSummary, WeatherConflict
 
 
-def audit_findings(risk: RiskSummary | None, conflicts: list[WeatherConflict]) -> AgentFinding:
+def risko_findings(risk: RiskSummary | None, conflicts: list[WeatherConflict]) -> AgentFinding:
     if risk is None:
         return AgentFinding(
-            agent="Auditor",
+            agent="Risko",
             severity="info",
             title="No alert-level weakness",
             detail="The current snapshot does not require a recommendation beyond monitoring.",
@@ -20,7 +20,7 @@ def audit_findings(risk: RiskSummary | None, conflicts: list[WeatherConflict]) -
     if conflicts:
         weaknesses.append("Weather impact uses reflectivity and echo tops only; winds and turbulence are absent.")
     return AgentFinding(
-        agent="Auditor",
+        agent="Risko",
         severity="watch" if risk.risk_score < 90 else "alert",
         title="Recommendation is plausible but bounded",
         detail="The recommendation is explainable from bundle data, but should be treated as decision support.",

@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 AltitudeBand = Literal["LOW", "HIGH"]
 Severity = Literal["info", "watch", "alert"]
-AgentName = Literal["Jarvis", "Weather Boy", "Air Marshal", "Domino", "Historian", "Auditor"]
+AgentName = Literal["Jarvis", "Weather Boy", "Air Marshal", "Domino", "Historian", "Risko"]
 
 
 class Scenario(BaseModel):

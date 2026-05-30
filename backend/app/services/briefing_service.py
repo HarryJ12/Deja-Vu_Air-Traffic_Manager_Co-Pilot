@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from app.config import get_settings
-from app.core.auditor import audit_findings, confidence_block
 from app.core.historian import mocked_historical_findings
 from app.core.recommendations import recommendations_for_risk
+from app.core.risko import confidence_block, risko_findings
 from app.core.schemas import AgentFinding, BriefingResponse
 
 from .ai_service import ClaudeBriefingService
@@ -95,6 +95,6 @@ class BriefingService:
                 evidence=["Delay is an explainable heuristic, not an FAA-certified prediction."],
             ),
             mocked_historical_findings(self.scenarios.bundle.scenario_ids(), scenario_id, primary),
-            audit_findings(primary, state.weather_conflicts),
+            risko_findings(primary, state.weather_conflicts),
         ]
         return findings

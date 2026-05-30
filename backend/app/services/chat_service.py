@@ -38,7 +38,7 @@ class ChatService:
             "Air Marshal",
             "Domino",
             "Historian",
-            "Auditor",
+            "Risko",
         ]
         messages: list[ChatMessage] = []
 
