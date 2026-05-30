@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 AltitudeBand = Literal["LOW", "HIGH"]
 Severity = Literal["info", "watch", "alert"]
+AgentName = Literal["Jarvis", "Weather Boy", "Air Marshal", "Domino", "Historian", "Auditor"]
 
 
 class Scenario(BaseModel):
@@ -84,7 +85,7 @@ class RiskSummary(BaseModel):
 
 
 class AgentFinding(BaseModel):
-    agent: Literal["Jarvis", "Weather Boy", "Air Marshal", "Domino", "Historian", "Auditor"]
+    agent: AgentName
     severity: Severity
     title: str
     detail: str
@@ -175,6 +176,8 @@ class ActionPreviewResponse(BaseModel):
 class VoiceSynthesisRequest(BaseModel):
     text: str
     voice_id: str | None = None
+    agent: AgentName = "Jarvis"
+    meeting_room: bool = False
 
 
 class VoiceSynthesisResponse(BaseModel):
@@ -190,3 +193,29 @@ class VoiceTranscriptionResponse(BaseModel):
     model: str
     text: str
     message: str
+
+
+class ChatRequest(BaseModel):
+    scenario_id: str
+    time_bin_id: str
+    message: str
+
+
+class MeetingRoomChatRequest(ChatRequest):
+    requested_agents: list[AgentName] | None = None
+
+
+class ChatMessage(BaseModel):
+    role: Literal["operator", "agent"]
+    agent: AgentName | None = None
+    content: str
+    severity: Severity = "info"
+    voice_id: str | None = None
+    source: str | None = None
+
+
+class ChatResponse(BaseModel):
+    room: Literal["jarvis", "meeting_room"]
+    messages: list[ChatMessage]
+    briefing: BriefingResponse
+    note: str

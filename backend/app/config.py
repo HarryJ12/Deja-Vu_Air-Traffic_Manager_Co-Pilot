@@ -27,6 +27,7 @@ class Settings:
     anthropic_api_key: str | None
     elevenlabs_api_key: str | None
     openai_transcription_model: str
+    agent_voice_ids: dict[str, str]
     use_mock_transcription: bool
     use_mock_llm: bool
     use_mock_voice: bool
@@ -78,6 +79,14 @@ def get_settings() -> Settings:
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
         elevenlabs_api_key=os.getenv("ELEVENLABS_API_KEY"),
         openai_transcription_model=os.getenv("OPENAI_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe"),
+        agent_voice_ids={
+            "Jarvis": os.getenv("ELEVENLABS_VOICE_JARVIS", "21m00Tcm4TlvDq8ikWAM"),
+            "Weather Boy": os.getenv("ELEVENLABS_VOICE_WEATHER_BOY", "21m00Tcm4TlvDq8ikWAM"),
+            "Air Marshal": os.getenv("ELEVENLABS_VOICE_AIR_MARSHAL", "21m00Tcm4TlvDq8ikWAM"),
+            "Domino": os.getenv("ELEVENLABS_VOICE_DOMINO", "21m00Tcm4TlvDq8ikWAM"),
+            "Historian": os.getenv("ELEVENLABS_VOICE_HISTORIAN", "21m00Tcm4TlvDq8ikWAM"),
+            "Auditor": os.getenv("ELEVENLABS_VOICE_AUDITOR", "21m00Tcm4TlvDq8ikWAM"),
+        },
         use_mock_transcription=_env_bool("USE_MOCK_TRANSCRIPTION", True),
         use_mock_llm=_env_bool("USE_MOCK_LLM", True),
         use_mock_voice=_env_bool("USE_MOCK_VOICE", True),

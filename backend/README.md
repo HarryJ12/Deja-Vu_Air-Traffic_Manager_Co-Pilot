@@ -35,6 +35,31 @@ Agent output:
 - Provider: ElevenLabs
 - Purpose: speak Jarvis and agent briefing output back to the operator
 
+## Chat Rooms
+
+Default operator chat:
+
+- `POST /api/chat/jarvis`
+- Only Jarvis replies.
+- Use this for the normal command surface outside the meeting room.
+
+Meeting room chat:
+
+- `POST /api/chat/meeting-room`
+- Jarvis can moderate, and specialist agents can reply directly.
+- Specialist agent voices are only enabled in this room.
+
+Agent voice environment variables:
+
+- `ELEVENLABS_VOICE_JARVIS`
+- `ELEVENLABS_VOICE_WEATHER_BOY`
+- `ELEVENLABS_VOICE_AIR_MARSHAL`
+- `ELEVENLABS_VOICE_DOMINO`
+- `ELEVENLABS_VOICE_HISTORIAN`
+- `ELEVENLABS_VOICE_AUDITOR`
+
+Until those are provided, all agents fall back to the default ElevenLabs voice ID.
+
 ## Local Data
 
 The backend auto-detects the bundle in this order:

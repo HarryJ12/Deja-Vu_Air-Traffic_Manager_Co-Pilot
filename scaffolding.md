@@ -715,6 +715,88 @@ Frontend behavior:
 - Send the agent briefing text to `/api/voice/synthesize`.
 - If `mode` is `live`, decode and play `audio_base64` using `content_type`.
 - If `mode` is `mock`, show the text and keep the UI functional.
+- Outside the meeting room, only Jarvis may request voice synthesis.
+- Inside the meeting room, specialist agents may request voice synthesis with their agent name.
+
+### POST `/api/chat/jarvis`
+
+Default command channel outside the meeting room.
+
+Behavior:
+
+- Operator can talk to Jarvis only.
+- Jarvis may summarize what the specialist agents found, but the specialist agents do not speak directly.
+- This is the normal push-to-talk surface in the tactical view.
+
+Request:
+
+```ts
+type ChatRequest = {
+  scenario_id: string;
+  time_bin_id: string;
+  message: string;
+};
+```
+
+Response:
+
+```ts
+type ChatResponse = {
+  room: "jarvis" | "meeting_room";
+  messages: ChatMessage[];
+  briefing: BriefingResponse;
+  note: string;
+};
+
+type ChatMessage = {
+  role: "operator" | "agent";
+  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Auditor" | null;
+  content: string;
+  severity: "info" | "watch" | "alert";
+  voice_id: string | null;
+  source: string | null;
+};
+```
+
+### POST `/api/chat/meeting-room`
+
+Multi-agent room for direct conversation with the specialist agents.
+
+Behavior:
+
+- Jarvis moderates.
+- Weather Boy, Air Marshal, Domino, Historian, and Auditor can speak directly.
+- Agent-specific ElevenLabs voices are enabled here only.
+- Frontend should visually separate this from the default tactical command channel.
+
+Request:
+
+```ts
+type MeetingRoomChatRequest = ChatRequest & {
+  requested_agents?: Array<
+    "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Auditor"
+  >;
+};
+```
+
+Agent voice configuration:
+
+```text
+ELEVENLABS_VOICE_JARVIS=
+ELEVENLABS_VOICE_WEATHER_BOY=
+ELEVENLABS_VOICE_AIR_MARSHAL=
+ELEVENLABS_VOICE_DOMINO=
+ELEVENLABS_VOICE_HISTORIAN=
+ELEVENLABS_VOICE_AUDITOR=
+```
+
+Frontend behavior:
+
+- Use `/api/chat/jarvis` for the normal app command mode.
+- Use `/api/chat/meeting-room` after the operator enters the meeting room.
+- Show each agent as a participant in the meeting room.
+- Use the returned `voice_id` when sending each agent message to `/api/voice/synthesize`.
+- Pass `meeting_room: true` to `/api/voice/synthesize` for specialist agent output.
 
 ## Frontend Layout
 

@@ -151,6 +151,9 @@ Voice architecture:
 - Operator input uses OpenAI Audio transcription.
 - Jarvis and agent output uses ElevenLabs text-to-speech.
 - Both providers must have mock fallbacks so the app still demos without live keys.
+- Outside the meeting room, the operator talks only to Jarvis.
+- Inside the meeting room, Jarvis moderates and the specialist agents can speak directly.
+- Specialist agent voices are only active in the meeting room.
 
 Example commands:
 

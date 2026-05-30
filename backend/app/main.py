@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.actions import router as actions_router
 from app.api.briefings import router as briefings_router
+from app.api.chat import router as chat_router
 from app.api.scenarios import router as scenarios_router
 from app.api.voice import router as voice_router
 from app.config import get_settings
@@ -27,6 +28,7 @@ def create_app() -> FastAPI:
     app.include_router(briefings_router)
     app.include_router(actions_router)
     app.include_router(voice_router)
+    app.include_router(chat_router)
 
     @app.get("/api/health")
     def health():
