@@ -1,8 +1,23 @@
-# Airspace Comprehension Layer Scaffolding
+# DĒJÅ VŪ Intelligence Scaffolding
 
 This file defines the project structure, backend outputs, frontend inputs, and integration rules for the hackathon build.
 
 The goal is to let frontend and backend work independently, then integrate through a stable API contract.
+
+Working product name:
+
+- DĒJÅ VŪ Intelligence
+
+Product category:
+
+- Airspace Comprehension Layer for traffic flow managers
+
+Brand direction:
+
+- ASI-inspired red, black, and white.
+- No gradients in the MVP.
+- Use flat color, crisp borders, and restrained shadows.
+- Logo will be provided later.
 
 ## Recommended Stack
 
@@ -740,16 +755,18 @@ Suggested tokens:
 
 ```css
 :root {
-  --color-bg: #0f1419;
-  --color-surface: #151c23;
-  --color-surface-2: #1d2630;
-  --color-border: #2a3642;
-  --color-text: #eef3f7;
-  --color-muted: #9aa7b3;
-  --color-selected: #4ea3ff;
-  --color-watch: #f3b743;
-  --color-alert: #e85d5d;
-  --color-good: #62c78f;
+  --color-bg: #050505;
+  --color-surface: #101010;
+  --color-surface-2: #181818;
+  --color-border: #2b2b2b;
+  --color-text: #f7f7f7;
+  --color-muted: #a8a8a8;
+  --color-brand-red: #e10600;
+  --color-brand-red-dark: #990f0f;
+  --color-selected: #ffffff;
+  --color-watch: #f7f7f7;
+  --color-alert: #e10600;
+  --color-good: #ffffff;
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -777,16 +794,20 @@ These rules are part of the scaffold. Treat them as acceptance criteria for fron
 
 ### Colors And Visual
 
-- No default purple gradients unless brand-appropriate.
+- Use the ASI-inspired red, black, and white theme.
+- No gradients in the MVP.
+- No purple, blue, green, amber, or rainbow accent palette unless explicitly approved for a specific operational reason.
 - Remove sparkles and emojis from hero headings.
 - Eliminate generic glowing hover effects.
 - Avoid one-note palettes.
 - Use operational colors intentionally:
-  - neutral background
-  - blue or cyan for selected state
-  - amber for watch
-  - red for alert
-  - green only for confirmed improvement
+  - black for app background
+  - dark gray for panels
+  - white for primary text and selected outlines
+  - red for brand accents, alert states, and critical calls to action
+  - gray patterns, labels, or outlines for watch/neutral states instead of extra accent colors
+- Use restrained shadows only for hierarchy.
+- Do not use glow as a substitute for layout or contrast.
 
 ### Typography
 

@@ -1,8 +1,19 @@
-# Airspace Comprehension Layer
+# DĒJÅ VŪ Intelligence
 
 ## One Sentence Pitch
 
-An AI-powered operational intelligence layer that combines future forecasting, historical precedent, explainable multi-agent reasoning, and voice-first interaction to help traffic flow managers understand complex airspace situations in seconds while remaining fully in control.
+DĒJÅ VŪ Intelligence is an AI-powered operational intelligence layer that combines future forecasting, historical precedent, explainable multi-agent reasoning, and voice-first interaction to help traffic flow managers understand complex airspace situations in seconds while remaining fully in control.
+
+Product category:
+
+- Airspace Comprehension Layer
+
+Brand direction:
+
+- ASI-inspired red, black, and white
+- No gradients in the MVP
+- Flat color, crisp borders, restrained shadows
+- Logo to be added later
 
 ## Hackathon Mission
 
@@ -681,16 +692,20 @@ Out of scope:
 
 ### Colors And Visual
 
-- No default purple gradients unless brand-appropriate.
+- Use the ASI-inspired red, black, and white theme.
+- No gradients in the MVP.
+- No purple, blue, green, amber, or rainbow accent palette unless explicitly approved for a specific operational reason.
 - Remove sparkles and emojis from hero headings.
 - Eliminate generic glowing hover effects.
 - Avoid one-note palettes.
 - Use operational colors intentionally:
-  - neutral background
-  - blue or cyan for selected state
-  - amber for watch
-  - red for alert
-  - green only for confirmed improvement
+  - black for app background
+  - dark gray for panels
+  - white for primary text and selected outlines
+  - red for brand accents, alert states, and critical calls to action
+  - gray patterns, labels, or outlines for watch/neutral states instead of extra accent colors
+- Use restrained shadows only for hierarchy.
+- Do not use glow as a substitute for layout or contrast.
 
 ### Typography
 
