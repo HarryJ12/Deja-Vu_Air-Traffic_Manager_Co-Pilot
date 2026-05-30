@@ -1,0 +1,60 @@
+{
+  "scenario": {
+    "id": "asked_at_2025-08-21T18:00:00Z",
+    "asked_at": "2025-08-21T18:00:00Z",
+    "flight_count": 17880,
+    "time_bin_count": 5,
+    "window_start": "2025-08-21T18:00:00Z",
+    "window_end": "2025-08-22T12:00:00Z"
+  },
+  "time_bins": [
+    { "id": "tb_0", "valid_from": "2025-08-21T18:00:00Z", "valid_to": "2025-08-21T18:15:00Z", "label": "NOW" },
+    { "id": "tb_1", "valid_from": "2025-08-21T18:15:00Z", "valid_to": "2025-08-21T18:30:00Z", "label": "+15 MIN" },
+    { "id": "tb_2", "valid_from": "2025-08-21T18:30:00Z", "valid_to": "2025-08-21T18:45:00Z", "label": "+30 MIN" },
+    { "id": "tb_3", "valid_from": "2025-08-21T18:45:00Z", "valid_to": "2025-08-21T19:00:00Z", "label": "+45 MIN" },
+    { "id": "tb_4", "valid_from": "2025-08-21T19:00:00Z", "valid_to": "2025-08-21T19:15:00Z", "label": "+60 MIN" }
+  ],
+  "initial_time_bin_id": "tb_1",
+  "top_risks": [
+    {
+      "id": "risk_high142",
+      "sector_id": "HIGH_142",
+      "altitude_band": "HIGH",
+      "peak_time": "2025-08-21T18:33:00Z",
+      "risk_score": 88,
+      "utilization_pct": 118,
+      "affected_flight_count": 43,
+      "projected_delay_minutes": 247,
+      "causes": [
+        "Convective weather blocks eastern corridor",
+        "22 flights converge through high-altitude sector",
+        "Utilization peaks at 118% of capacity"
+      ]
+    },
+    {
+      "id": "risk_high144",
+      "sector_id": "HIGH_144",
+      "altitude_band": "HIGH",
+      "peak_time": "2025-08-21T18:48:00Z",
+      "risk_score": 61,
+      "utilization_pct": 83,
+      "affected_flight_count": 15,
+      "projected_delay_minutes": 64,
+      "causes": [
+        "Adjacent to HIGH_142 overflow",
+        "Rising demand on westbound reroute path"
+      ]
+    }
+  ],
+  "sectors": {
+    "type": "FeatureCollection",
+    "features": [
+      { "type": "Feature", "properties": { "name": "HIGH_141", "altitude_from_ft": 35000, "altitude_to_ft": 60000, "capacity": 18 }, "geometry": { "type": "Polygon", "coordinates": [[[-122,49],[-106,49],[-106,41],[-122,41],[-122,49]]] } },
+      { "type": "Feature", "properties": { "name": "HIGH_142", "altitude_from_ft": 35000, "altitude_to_ft": 60000, "capacity": 18 }, "geometry": { "type": "Polygon", "coordinates": [[[-106,49],[-90,49],[-90,41],[-106,41],[-106,49]]] } },
+      { "type": "Feature", "properties": { "name": "HIGH_143", "altitude_from_ft": 35000, "altitude_to_ft": 60000, "capacity": 19 }, "geometry": { "type": "Polygon", "coordinates": [[[-90,49],[-70,49],[-70,41],[-90,41],[-90,49]]] } },
+      { "type": "Feature", "properties": { "name": "HIGH_144", "altitude_from_ft": 35000, "altitude_to_ft": 60000, "capacity": 18 }, "geometry": { "type": "Polygon", "coordinates": [[[-106,41],[-90,41],[-90,33],[-106,33],[-106,41]]] } },
+      { "type": "Feature", "properties": { "name": "HIGH_145", "altitude_from_ft": 35000, "altitude_to_ft": 60000, "capacity": 18 }, "geometry": { "type": "Polygon", "coordinates": [[[-122,41],[-106,41],[-106,31],[-122,31],[-122,41]]] } },
+      { "type": "Feature", "properties": { "name": "HIGH_146", "altitude_from_ft": 35000, "altitude_to_ft": 60000, "capacity": 20 }, "geometry": { "type": "Polygon", "coordinates": [[[-90,41],[-70,41],[-70,31],[-90,31],[-90,41]]] } }
+    ]
+  }
+}

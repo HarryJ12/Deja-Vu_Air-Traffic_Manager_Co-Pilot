@@ -1,0 +1,20 @@
+{
+  "recommendation_id": "rec_west_reroute",
+  "before": {
+    "max_utilization_pct": 118,
+    "overloaded_sector_count": 1,
+    "affected_flight_count": 43,
+    "projected_delay_minutes": 247
+  },
+  "after": {
+    "max_utilization_pct": 96,
+    "overloaded_sector_count": 0,
+    "affected_flight_count": 31,
+    "projected_delay_minutes": 195
+  },
+  "changed_sectors": [
+    { "sector_id": "HIGH_142", "before_utilization_pct": 118, "after_utilization_pct": 96, "delta_pct": -22 },
+    { "sector_id": "HIGH_144", "before_utilization_pct": 83, "after_utilization_pct": 95, "delta_pct": 12 }
+  ],
+  "narrative": "Metering westbound flow clears the HIGH_142 breach (118% to 96%) and removes the overload, at the cost of raising HIGH_144 to 95%. Net projected delay drops from 247 to 195 minutes. Forecast simulation, not a certified outcome."
+}

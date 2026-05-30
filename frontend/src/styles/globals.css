@@ -1,0 +1,145 @@
+@import "./tokens.css";
+@import "./components.css";
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* Typography */
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+h1 {
+  font-size: var(--font-size-xl);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+}
+h2 {
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-strong);
+  padding-bottom: var(--spacing-xs);
+}
+h3 {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-xs);
+}
+
+p {
+  font-size: var(--font-size-md);
+}
+
+ul {
+  list-style-type: square;
+  padding-left: var(--spacing-md);
+  color: var(--text-secondary);
+}
+li {
+  margin-bottom: var(--spacing-xs);
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Utilities */
+.text-accent {
+  color: var(--accent-red);
+  font-weight: 600;
+}
+.text-dim {
+  color: var(--text-secondary);
+}
+.monospace {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+/* Status dots — square (anti-vibe) */
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.status-dot.alert,
+.status-dot.critical {
+  background-color: var(--accent-red);
+}
+.status-dot.watch {
+  background-color: var(--text-secondary);
+}
+
+/* Scrollbars — restrained */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+}
+
+/* Focus — visible (a11y) */
+:focus-visible {
+  outline: 1px solid var(--text-primary);
+  outline-offset: 1px;
+}
+
+/* Skeleton shimmer (single-channel, no rainbow) */
+@keyframes shimmer {
+  0% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0.35;
+  }
+}
+.skeleton {
+  background-color: var(--border-subtle);
+  animation: shimmer 1.2s var(--ease-standard) infinite;
+}
+
+/* Staggered reveal for agent lanes */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

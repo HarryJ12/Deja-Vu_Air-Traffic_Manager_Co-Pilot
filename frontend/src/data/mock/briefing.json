@@ -1,0 +1,92 @@
+{
+  "mode": "quick",
+  "headline": "Sector HIGH_142 projected to exceed capacity in 18 minutes.",
+  "summary": "Convective weather is blocking the eastern corridor and pushing 22 flights into a single high-altitude sector. Utilization peaks at 118% of capacity. A westbound meter or reroute relieves the breach but shifts load toward HIGH_144.",
+  "primary_risk": {
+    "id": "risk_high142",
+    "sector_id": "HIGH_142",
+    "altitude_band": "HIGH",
+    "peak_time": "2025-08-21T18:33:00Z",
+    "risk_score": 88,
+    "utilization_pct": 118,
+    "affected_flight_count": 43,
+    "projected_delay_minutes": 247,
+    "causes": [
+      "Convective weather blocks eastern corridor",
+      "22 flights converge through high-altitude sector",
+      "Utilization peaks at 118% of capacity"
+    ]
+  },
+  "agents": [
+    {
+      "agent": "Air Marshal",
+      "severity": "alert",
+      "title": "Sector HIGH_142",
+      "detail": "Peak overload projected in 18 minutes. 22 contributing flights.",
+      "evidence": ["count 21 vs capacity 18", "overload 3 flights", "peak 18:33Z"],
+      "metric": "118% CAP"
+    },
+    {
+      "agent": "Weather Boy",
+      "severity": "alert",
+      "title": "Echo Top",
+      "detail": "Convective weather blocking eastern corridor. Propagation exceeds historical pattern by 38%.",
+      "evidence": ["refc 52 dBZ peak", "echo top 44,000 ft", "blocks 3 filed routes"],
+      "metric": "42,000 FT"
+    },
+    {
+      "agent": "Domino",
+      "severity": "watch",
+      "title": "Network Impact",
+      "detail": "Arrival banks at ORD and EWR will inherit delay if unmitigated.",
+      "evidence": ["+247 projected delay min", "downstream HIGH_144 pressure rising"],
+      "metric": "+247 MIN"
+    },
+    {
+      "agent": "Historian",
+      "severity": "info",
+      "title": "Similar Scenarios",
+      "detail": "Western reroute observed success rate 83% across matched precedents.",
+      "evidence": ["8 matches", "avg delay reduction 18%", "closest match 2025-08-13"],
+      "metric": "8 MATCHES"
+    },
+    {
+      "agent": "Auditor",
+      "severity": "watch",
+      "title": "Confidence Check",
+      "detail": "Storm propagation exceeds historical match by 38%. Historical confidence reduced 91% to 87%.",
+      "evidence": ["divergence detected", "precedent partially applies"],
+      "metric": "-4%"
+    }
+  ],
+  "recommendations": [
+    {
+      "id": "rec_west_reroute",
+      "title": "Meter or Reroute Westbound Flow",
+      "action_type": "reroute",
+      "summary": "Meter westbound flow before the HIGH_142 peak and route via the western corridor.",
+      "expected_impact": "Relieves HIGH_142 to ~96% capacity; ~21% delay reduction.",
+      "confidence_pct": 87,
+      "affected_flight_ids": ["UAL2367_KDEN", "AAL118_KLAX", "UAL905_KSFO", "DAL2201_KATL"],
+      "agent_contributors": ["Air Marshal", "Weather Boy", "Historian"],
+      "risks": ["Shifts 12% capacity burden to adjacent sector HIGH_144."]
+    }
+  ],
+  "confidence": {
+    "overall_pct": 87,
+    "support": [
+      "Air Marshal and Weather Boy agree on cause",
+      "8 historical precedents favor western reroute (83% success)"
+    ],
+    "weaknesses": [
+      "Storm propagation exceeds precedent by 38%",
+      "Delay estimate is an inspectable heuristic, not a certified prediction"
+    ],
+    "divergence_alarm": {
+      "is_active": true,
+      "reason": "Auditor notes storm propagation exceeds historical match by 38%. Historical recommendation confidence reduced from 91% to 87%.",
+      "confidence_delta_pct": -4
+    }
+  },
+  "generated_at": "2025-08-21T18:15:04Z"
+}

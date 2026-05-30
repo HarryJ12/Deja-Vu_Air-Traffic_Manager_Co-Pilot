@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DĒJÅ VŪ // Draggable Agents</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --panel: #111111;
+      --border-subtle: #2a2a2a;
+      --border-strong: #404040;
+      --text-primary: #ffffff;
+      --text-secondary: #888888;
+      --accent-red: #D32F2F;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top bar */
+    .bar {
+      height: 48px;
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border-strong);
+      background: var(--bg);
+      z-index: 50;
+    }
+    .bar .name { font-size: 15px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+    .bar .hint { font-family: monospace; font-size: 11px; color: var(--text-secondary); letter-spacing: 0.05em; }
+
+    /* Airspace canvas — the draggable zone */
+    .canvas {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      background-color: #050505;
+      background-image:
+        linear-gradient(var(--border-subtle) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+
+    /* Agent persona token */
+    .agent {
+      position: absolute;
+      width: 176px;
+      background: var(--panel);
+      border: 1px solid var(--border-strong);
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .agent:hover { border-color: var(--text-secondary); }
+    .agent:active { cursor: grabbing; box-shadow: 0 8px 28px rgba(0,0,0,0.65); }
+    .agent.alert { border-color: var(--accent-red); }
+
+    .agent .face { width: 48px; height: 48px; flex: none; color: var(--text-primary); }
+    .agent.alert .face { color: var(--accent-red); }
+
+    .agent .meta { min-width: 0; }
+    .agent .anm { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .agent .arole { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin: 1px 0 5px; }
+    .agent .aout { font-family: monospace; font-size: 10.5px; line-height: 1.45; color: var(--text-secondary); letter-spacing: 0.03em; }
+    .agent.alert .aout { color: var(--accent-red); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <header class="bar">
+    <span class="name">DĒJÅ VŪ</span>
+    <span class="hint">// drag agents anywhere</span>
+  </header>
+
+  <div class="canvas" id="canvas">
+
+    <!-- Air Marshal -->
+    <div class="agent alert" style="left:32px; top:32px;">
+      <svg class="face" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M13 25 Q32 13 51 25"/><path d="M27 19 l5 -4 l5 4"/>
+        <circle cx="32" cy="37" r="19"/>
+        <circle cx="25" cy="35" r="1.6" fill="currentColor"/><circle cx="39" cy="35" r="1.6" fill="currentColor"/>
+        <path d="M25 47 H39"/>
+      </svg>
+      <div class="meta"><div class="anm">Air Marshal</div><div class="arole">Capacity</div><div class="aout">HIGH_142<br>118% CAP</div></div>
+    </div>
+
+    <!-- Weather Boy -->
+    <div class="agent" style="left:420px; top:40px;">
+      <svg class="face" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="32" cy="34" r="19"/><path d="M33 15 l-5 8 h5 l-4 8"/>
+        <circle cx="25" cy="34" r="1.6" fill="currentColor"/><circle cx="39" cy="34" r="1.6" fill="currentColor"/>
+        <path d="M24 47 q4 -4 8 0 t8 0"/>
+      </svg>
+      <div class="meta"><div class="anm">Weather Boy</div><div class="arole">Met Impact</div><div class="aout">CONVECTIVE<br>E CORRIDOR</div></div>
+    </div>
+
+    <!-- Domino -->
+    <div class="agent alert" style="left:230px; top:260px;">
+      <svg class="face" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="32" cy="34" r="19"/><path d="M32 28 V44" stroke-width="1.5"/>
+        <circle cx="25" cy="31" r="1.5" fill="currentColor"/><circle cx="25" cy="38" r="1.5" fill="currentColor"/>
+        <circle cx="39" cy="30" r="1.5" fill="currentColor"/><circle cx="39" cy="34" r="1.5" fill="currentColor"/><circle cx="39" cy="38" r="1.5" fill="currentColor"/>
+        <path d="M26 48 H38"/>
+      </svg>
+      <div class="meta"><div class="anm">Domino</div><div class="arole">Network</div><div class="aout">+247 MIN<br>@ ORD</div></div>
+    </div>
+
+    <!-- Historian -->
+    <div class="agent" style="left:560px; top:300px;">
+      <svg class="face" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="32" cy="34" r="19"/><circle cx="25" cy="34" r="1.6" fill="currentColor"/>
+        <circle cx="40" cy="34" r="5.5"/><path d="M45 39 q4 5 -1 8" stroke-width="1.5"/>
+        <path d="M24 45 q8 5 15 0"/>
+      </svg>
+      <div class="meta"><div class="anm">Historian</div><div class="arole">Precedent</div><div class="aout">8 MATCHES<br>83% WIN</div></div>
+    </div>
+
+    <!-- Auditor -->
+    <div class="agent" style="left:90px; top:430px;">
+      <svg class="face" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="32" cy="34" r="19"/><path d="M22 30 h8"/><path d="M36 27 l9 -2"/>
+        <path d="M23 36 h5"/><path d="M37 36 h5"/><path d="M25 47 q7 -3 14 0"/>
+      </svg>
+      <div class="meta"><div class="anm">Auditor</div><div class="arole">Confidence</div><div class="aout">DIVERGE +38%<br>CONF 87%</div></div>
+    </div>
+
+  </div>
+
+  <script>
+    (function () {
+      var canvas = document.getElementById('canvas');
+      if (!canvas) return;
+      var agents = canvas.querySelectorAll('.agent');
+      var z = 10;
+
+      agents.forEach(function (a) {
+        var dragging = false, ox = 0, oy = 0;
+
+        a.addEventListener('pointerdown', function (e) {
+          dragging = true;
+          a.setPointerCapture(e.pointerId);
+          var r = a.getBoundingClientRect();
+          ox = e.clientX - r.left;
+          oy = e.clientY - r.top;
+          a.style.zIndex = (++z);
+        });
+
+        a.addEventListener('pointermove', function (e) {
+          if (!dragging) return;
+          var c = canvas.getBoundingClientRect();
+          var x = e.clientX - c.left - ox;
+          var y = e.clientY - c.top - oy;
+          x = Math.max(0, Math.min(x, c.width - a.offsetWidth));
+          y = Math.max(0, Math.min(y, c.height - a.offsetHeight));
+          a.style.left = Math.round(x) + 'px';
+          a.style.top = Math.round(y) + 'px';
+        });
+
+        function end() { dragging = false; }
+        a.addEventListener('pointerup', end);
+        a.addEventListener('pointercancel', end);
+      });
+    })();
+  </script>
+</body>
+</html>

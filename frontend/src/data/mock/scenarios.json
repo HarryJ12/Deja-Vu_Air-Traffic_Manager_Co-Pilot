@@ -1,0 +1,15 @@
+{
+  "scenarios": [
+    { "id": "asked_at_2025-08-21T18:00:00Z", "asked_at": "2025-08-21T18:00:00Z", "flight_count": 17880, "time_bin_count": 5, "window_start": "2025-08-21T18:00:00Z", "window_end": "2025-08-22T12:00:00Z" },
+    { "id": "asked_at_2025-05-29T21:00:00Z", "asked_at": "2025-05-29T21:00:00Z", "flight_count": 16687, "time_bin_count": 5, "window_start": "2025-05-29T21:00:00Z", "window_end": "2025-05-30T15:00:00Z" },
+    { "id": "asked_at_2025-06-10T17:00:00Z", "asked_at": "2025-06-10T17:00:00Z", "flight_count": 17074, "time_bin_count": 5, "window_start": "2025-06-10T17:00:00Z", "window_end": "2025-06-11T11:00:00Z" },
+    { "id": "asked_at_2025-07-01T21:30:00Z", "asked_at": "2025-07-01T21:30:00Z", "flight_count": 13946, "time_bin_count": 5, "window_start": "2025-07-01T21:30:00Z", "window_end": "2025-07-02T15:30:00Z" },
+    { "id": "asked_at_2025-07-08T22:00:00Z", "asked_at": "2025-07-08T22:00:00Z", "flight_count": 14726, "time_bin_count": 5, "window_start": "2025-07-08T22:00:00Z", "window_end": "2025-07-09T16:00:00Z" },
+    { "id": "asked_at_2025-07-14T22:35:00Z", "asked_at": "2025-07-14T22:35:00Z", "flight_count": 14712, "time_bin_count": 5, "window_start": "2025-07-14T22:35:00Z", "window_end": "2025-07-15T16:35:00Z" },
+    { "id": "asked_at_2025-08-13T18:00:00Z", "asked_at": "2025-08-13T18:00:00Z", "flight_count": 15183, "time_bin_count": 5, "window_start": "2025-08-13T18:00:00Z", "window_end": "2025-08-14T12:00:00Z" },
+    { "id": "asked_at_2025-08-22T18:00:00Z", "asked_at": "2025-08-22T18:00:00Z", "flight_count": 16143, "time_bin_count": 5, "window_start": "2025-08-22T18:00:00Z", "window_end": "2025-08-23T12:00:00Z" },
+    { "id": "asked_at_2026-01-13T18:00:00Z", "asked_at": "2026-01-13T18:00:00Z", "flight_count": 14549, "time_bin_count": 5, "window_start": "2026-01-13T18:00:00Z", "window_end": "2026-01-14T12:00:00Z" },
+    { "id": "asked_at_2026-03-04T18:00:00Z", "asked_at": "2026-03-04T18:00:00Z", "flight_count": 16695, "time_bin_count": 5, "window_start": "2026-03-04T18:00:00Z", "window_end": "2026-03-05T12:00:00Z" },
+    { "id": "asked_at_2026-04-08T18:00:00Z", "asked_at": "2026-04-08T18:00:00Z", "flight_count": 16722, "time_bin_count": 5, "window_start": "2026-04-08T18:00:00Z", "window_end": "2026-04-09T12:00:00Z" }
+  ]
+}

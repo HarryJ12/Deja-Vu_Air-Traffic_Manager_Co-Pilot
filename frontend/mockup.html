@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DĒJÅ VŪ Intelligence - Operational Console</title>
+    <style>
+        /* Anti-Vibe Design System */
+        :root {
+            --bg-base: #000000;
+            --bg-panel: #141414;
+            --bg-panel-hover: #1c1c1c;
+            --border-subtle: #2a2a2a;
+            --border-strong: #404040;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-red: #D32F2F;
+            --accent-red-hover: #B71C1C;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 13px;
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Typography */
+        h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
+        h1 { font-size: 16px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-primary); }
+        h2 { font-size: 14px; color: var(--text-primary); margin-bottom: var(--spacing-sm); border-bottom: 1px solid var(--border-strong); padding-bottom: var(--spacing-xs); }
+        h3 { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: var(--spacing-xs); }
+        .text-accent { color: var(--accent-red); font-weight: 600; }
+        .text-dim { color: var(--text-secondary); }
+        
+        /* Layout */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-bottom: 1px solid var(--border-strong);
+            background-color: var(--bg-base);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr 340px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .panel {
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .panel-content {
+            padding: var(--spacing-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        /* Top Bar Controls */
+        .timeline-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .slider {
+            width: 300px;
+            accent-color: var(--text-primary);
+        }
+
+        .ptt-button {
+            background-color: var(--accent-red);
+            color: white;
+            border: 1px solid transparent;
+            padding: 6px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.1s ease;
+        }
+
+        .ptt-button:hover { background-color: var(--accent-red-hover); }
+        .ptt-button:active { transform: translateY(1px); }
+
+        /* Tactical Airspace View (Center) */
+        .map-container {
+            background-color: #0a0a0a;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: 
+                linear-gradient(var(--border-subtle) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .map-placeholder-text {
+            color: var(--border-strong);
+            font-family: monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Alert Overlay */
+        .divergence-alert {
+            position: absolute;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            right: var(--spacing-md);
+            background-color: var(--bg-base);
+            border: 1px solid var(--accent-red);
+            padding: var(--spacing-md);
+            display: flex;
+            gap: var(--spacing-md);
+            align-items: flex-start;
+        }
+
+        /* Action Cards & Agent Outputs */
+        .info-block {
+            border: 1px solid var(--border-subtle);
+            padding: var(--spacing-sm);
+            background-color: var(--bg-base);
+        }
+
+        .info-block-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        ul {
+            list-style-type: square;
+            padding-left: var(--spacing-md);
+            color: var(--text-secondary);
+        }
+
+        li { margin-bottom: 4px; }
+
+        .btn-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+
+        .btn {
+            background-color: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-strong);
+            padding: 6px 12px;
+            font-size: 11px;
+            text-transform: uppercase;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn:hover { background-color: var(--bg-panel-hover); border-color: var(--text-secondary); }
+        .btn.primary { background-color: var(--text-primary); color: var(--bg-base); border-color: var(--text-primary); }
+        .btn.primary:hover { background-color: var(--text-secondary); }
+
+        /* Status Indicators */
+        .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: var(--text-primary);
+            border-radius: 0; /* Anti-vibe: square dots */
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        .status-dot.critical { background-color: var(--accent-red); }
+
+        /* Utility */
+        .monospace { font-family: monospace; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>DĒJÅ VŪ</h1>
+        
+        <div class="timeline-controls">
+            <span class="monospace text-dim">NOW</span>
+            <input type="range" min="0" max="60" step="15" value="15" class="slider" id="timeSlider">
+            <span class="monospace text-dim">+<span id="timeValue">15</span> MIN</span>
+        </div>
+
+        <button class="ptt-button" id="pttBtn">Hold to talk: Jarvis</button>
+    </header>
+
+    <div class="main-grid">
+        
+        <aside class="panel">
+            <div class="panel-content">
+                <h2>Agent Evidence</h2>
+
+                <div class="info-block">
+                    <h3>Air Marshal</h3>
+                    <div class="info-block-row">
+                        <span>Sector HIGH_142</span>
+                        <span class="text-accent monospace">118% CAP</span>
+                    </div>
+                    <p class="text-dim">Peak overload projected in 18 minutes. 22 contributing flights.</p>
+                </div>
+
+                <div class="info-block">
+                    <h3>Weather Boy</h3>
+                    <div class="info-block-row">
+                        <span>Echo Top</span>
+                        <span class="monospace">42,000 FT</span>
+                    </div>
+                    <p class="text-dim">Convective weather blocking eastern corridor. Propagation exceeds historical pattern by 38%.</p>
+                </div>
+
+                <div class="info-block">
+                    <h3>Domino</h3>
+                    <div class="info-block-row">
+                        <span>Network Impact</span>
+                        <span class="monospace">+247 MIN</span>
+                    </div>
+                    <p class="text-dim">Arrival banks at ORD and EWR will inherit delay if unmitigated.</p>
+                </div>
+
+                <div class="info-block">
+                    <h3>Historian</h3>
+                    <div class="info-block-row">
+                        <span>Similar Scenarios</span>
+                        <span class="monospace">8 MATCHES</span>
+                    </div>
+                    <p class="text-dim">Western reroute observed success rate: 83%.</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="map-container">
+            <div class="divergence-alert">
+                <div class="status-dot critical"></div>
+                <div>
+                    <span class="text-accent" style="font-weight: 600; text-transform: uppercase;">Divergence Detected</span>
+                    <p class="text-dim" style="margin-top: 4px;">Auditor notes storm propagation exceeds historical match by 38%. Historical recommendation confidence reduced from 91% to 87%.</p>
+                </div>
+            </div>
+            
+            <div class="map-placeholder-text">
+                [ Tactical Airspace Canvas Render ]
+            </div>
+        </main>
+
+        <aside class="panel">
+            <div class="panel-content">
+                
+                <h2>Situation Brief</h2>
+                <div class="info-block" style="border-left: 2px solid var(--accent-red);">
+                    <p style="margin-bottom: var(--spacing-sm);">
+                        Sector <strong>HIGH_142</strong> is projected to exceed capacity in <strong>18 minutes</strong>.
+                    </p>
+                    
+                    <h3>Cause</h3>
+                    <ul>
+                        <li>Convective weather blocks eastern corridor.</li>
+                        <li>22 flights converge through high-altitude sector.</li>
+                        <li>Utilization peaks at 118% of capacity.</li>
+                    </ul>
+
+                    <h3 style="margin-top: var(--spacing-sm);">Impact</h3>
+                    <ul>
+                        <li>43 affected flights.</li>
+                        <li>247 projected delay minutes.</li>
+                    </ul>
+                </div>
+
+                <h2 style="margin-top: var(--spacing-md);">Recommended Action</h2>
+                <div class="info-block">
+                    <div class="info-block-row">
+                        <strong>Meter or Reroute Westbound Flow</strong>
+                    </div>
+                    <div class="info-block-row text-dim monospace" style="margin-top: var(--spacing-xs);">
+                        <span>Confidence</span>
+                        <span>87%</span>
+                    </div>
+                    
+                    <p class="text-dim" style="margin-top: var(--spacing-sm);">
+                        <strong>Risks (Auditor):</strong> Shifts 12% capacity burden to adjacent sector HIGH_144.
+                    </p>
+
+                    <div class="btn-group">
+                        <button class="btn">Reject</button>
+                        <button class="btn">Modify</button>
+                        <button class="btn primary">Preview</button>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Simple Interaction logic for MVP
+        const slider = document.getElementById('timeSlider');
+        const timeValue = document.getElementById('timeValue');
+        const pttBtn = document.getElementById('pttBtn');
+
+        slider.addEventListener('input', (e) => {
+            timeValue.textContent = e.target.value;
+            // In a real app, this triggers Time Warp state update
+        });
+
+        pttBtn.addEventListener('mousedown', () => {
+            pttBtn.textContent = "LISTENING...";
+            pttBtn.style.backgroundColor = "var(--text-primary)";
+            pttBtn.style.color = "var(--bg-base)";
+        });
+
+        pttBtn.addEventListener('mouseup', () => {
+            pttBtn.textContent = "Hold to talk: Jarvis";
+            pttBtn.style.backgroundColor = "var(--accent-red)";
+            pttBtn.style.color = "white";
+        });
+        
+        pttBtn.addEventListener('mouseleave', () => {
+            pttBtn.textContent = "Hold to talk: Jarvis";
+            pttBtn.style.backgroundColor = "var(--accent-red)";
+            pttBtn.style.color = "white";
+        });
+    </script>
+</body>
+</html>

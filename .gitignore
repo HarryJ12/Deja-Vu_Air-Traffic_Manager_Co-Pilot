@@ -1,12 +1,32 @@
-.DS_Store
-.env
+# Raw data bundle — never commit (multi-GB)
+data_extracted/
+hackathon_data_bundle.zip
+hackathon_data_bundle/
+Hackathon Data Bundle/
+
+# Dependencies / build output
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+# tsc -b emits these from vite.config.ts (composite project)
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
+# Backend cache (keep the folder, drop its contents)
+data/cache/*
+!data/cache/.gitkeep
+
+# Python
 .venv/
 __pycache__/
 *.pyc
 .pytest_cache/
+.env
 
-# Raw data should stay local. The backend can read it, but do not commit it.
-hackathon_data_bundle/
-Hackathon Data Bundle/
-data/cache/*
-!data/cache/.gitkeep
+# Local backups / scratch
+plan.local.bak.md
+
+# OS
+.DS_Store
+Thumbs.db

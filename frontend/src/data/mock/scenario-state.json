@@ -1,0 +1,69 @@
+{
+  "time_bin": { "id": "tb_1", "valid_from": "2025-08-21T18:15:00Z", "valid_to": "2025-08-21T18:30:00Z", "label": "+15 MIN" },
+  "flights": [
+    { "flight_id": "UAL2367_KDEN", "flight_number": "UAL2367", "lat": 44.2, "lon": -100.1, "altitude_ft": 38000, "speed_kt": 460, "origin": "KDEN", "destination": "KORD" },
+    { "flight_id": "AAL118_KLAX", "flight_number": "AAL118", "lat": 43.1, "lon": -97.4, "altitude_ft": 39000, "speed_kt": 470, "origin": "KLAX", "destination": "KEWR" },
+    { "flight_id": "DAL884_KSEA", "flight_number": "DAL884", "lat": 45.6, "lon": -103.2, "altitude_ft": 37000, "speed_kt": 455, "origin": "KSEA", "destination": "KMSP" },
+    { "flight_id": "SWA221_KPHX", "flight_number": "SWA221", "lat": 42.4, "lon": -95.0, "altitude_ft": 38000, "speed_kt": 440, "origin": "KPHX", "destination": "KORD" },
+    { "flight_id": "UAL905_KSFO", "flight_number": "UAL905", "lat": 46.0, "lon": -94.5, "altitude_ft": 40000, "speed_kt": 475, "origin": "KSFO", "destination": "KORD" },
+    { "flight_id": "JBU615_KBOS", "flight_number": "JBU615", "lat": 41.8, "lon": -92.1, "altitude_ft": 36000, "speed_kt": 450, "origin": "KBOS", "destination": "KDEN" },
+    { "flight_id": "AAL44_KJFK", "flight_number": "AAL44", "lat": 44.9, "lon": -91.0, "altitude_ft": 39000, "speed_kt": 465, "origin": "KJFK", "destination": "KSEA" },
+    { "flight_id": "DAL2201_KATL", "flight_number": "DAL2201", "lat": 47.1, "lon": -98.8, "altitude_ft": 41000, "speed_kt": 472, "origin": "KATL", "destination": "KSEA" },
+    { "flight_id": "FFT88_KLAS", "flight_number": "FFT88", "lat": 38.0, "lon": -99.5, "altitude_ft": 37000, "speed_kt": 445, "origin": "KLAS", "destination": "KMCI" },
+    { "flight_id": "UAL1190_KIAH", "flight_number": "UAL1190", "lat": 36.5, "lon": -96.0, "altitude_ft": 38000, "speed_kt": 458, "origin": "KIAH", "destination": "KORD" },
+    { "flight_id": "SKW55_KSLC", "flight_number": "SKW55", "lat": 35.0, "lon": -112.0, "altitude_ft": 36000, "speed_kt": 430, "origin": "KSLC", "destination": "KDFW" },
+    { "flight_id": "DAL77_KMIA", "flight_number": "DAL77", "lat": 34.2, "lon": -82.0, "altitude_ft": 39000, "speed_kt": 468, "origin": "KMIA", "destination": "KORD" },
+    { "flight_id": "AAL612_KORD", "flight_number": "AAL612", "lat": 45.2, "lon": -88.5, "altitude_ft": 40000, "speed_kt": 470, "origin": "KORD", "destination": "KBOS" },
+    { "flight_id": "UAL330_KEWR", "flight_number": "UAL330", "lat": 43.7, "lon": -78.0, "altitude_ft": 38000, "speed_kt": 462, "origin": "KEWR", "destination": "KDEN" }
+  ],
+  "sector_occupancy": [
+    { "sector_id": "HIGH_141", "altitude_band": "HIGH", "count": 9, "capacity": 18, "utilization_pct": 50, "overload_count": 0, "contributing_flight_ids": [], "polygon": [[-122,49],[-106,49],[-106,41],[-122,41],[-122,49]] },
+    { "sector_id": "HIGH_142", "altitude_band": "HIGH", "count": 21, "capacity": 18, "utilization_pct": 118, "overload_count": 3, "contributing_flight_ids": ["UAL2367_KDEN","AAL118_KLAX","DAL884_KSEA","SWA221_KPHX","UAL905_KSFO","JBU615_KBOS","AAL44_KJFK","DAL2201_KATL"], "polygon": [[-106,49],[-90,49],[-90,41],[-106,41],[-106,49]] },
+    { "sector_id": "HIGH_143", "altitude_band": "HIGH", "count": 14, "capacity": 19, "utilization_pct": 74, "overload_count": 0, "contributing_flight_ids": ["UAL330_KEWR"], "polygon": [[-90,49],[-70,49],[-70,41],[-90,41],[-90,49]] },
+    { "sector_id": "HIGH_144", "altitude_band": "HIGH", "count": 15, "capacity": 18, "utilization_pct": 83, "overload_count": 0, "contributing_flight_ids": ["FFT88_KLAS","UAL1190_KIAH"], "polygon": [[-106,41],[-90,41],[-90,33],[-106,33],[-106,41]] },
+    { "sector_id": "HIGH_145", "altitude_band": "HIGH", "count": 6, "capacity": 18, "utilization_pct": 33, "overload_count": 0, "contributing_flight_ids": ["SKW55_KSLC"], "polygon": [[-122,41],[-106,41],[-106,31],[-122,31],[-122,41]] },
+    { "sector_id": "HIGH_146", "altitude_band": "HIGH", "count": 11, "capacity": 20, "utilization_pct": 55, "overload_count": 0, "contributing_flight_ids": ["DAL77_KMIA"], "polygon": [[-90,41],[-70,41],[-70,31],[-90,31],[-90,41]] }
+  ],
+  "weather_conflicts": [
+    { "flight_id": "AAL44_KJFK", "sector_id": "HIGH_142", "lat": 44.9, "lon": -91.0, "refc_dbz": 48, "retop_ft": 42000, "altitude_ft": 39000, "severity": "alert" },
+    { "flight_id": "UAL905_KSFO", "sector_id": "HIGH_142", "lat": 46.0, "lon": -94.5, "refc_dbz": 44, "retop_ft": 41000, "altitude_ft": 40000, "severity": "alert" },
+    { "flight_id": "AAL612_KORD", "sector_id": "HIGH_142", "lat": 45.2, "lon": -88.5, "refc_dbz": 41, "retop_ft": 40000, "altitude_ft": 40000, "severity": "watch" }
+  ],
+  "weather_tiles": [
+    { "kind": "points", "points": [
+      { "lat": 45.5, "lon": -90.0, "refc_dbz": 52, "retop_ft": 44000 },
+      { "lat": 44.5, "lon": -91.5, "refc_dbz": 48, "retop_ft": 42000 },
+      { "lat": 46.2, "lon": -93.0, "refc_dbz": 45, "retop_ft": 41000 },
+      { "lat": 43.8, "lon": -89.0, "refc_dbz": 43, "retop_ft": 40000 },
+      { "lat": 45.0, "lon": -88.0, "refc_dbz": 41, "retop_ft": 39000 }
+    ] }
+  ],
+  "risks": [
+    {
+      "id": "risk_high142",
+      "sector_id": "HIGH_142",
+      "altitude_band": "HIGH",
+      "peak_time": "2025-08-21T18:33:00Z",
+      "risk_score": 88,
+      "utilization_pct": 118,
+      "affected_flight_count": 43,
+      "projected_delay_minutes": 247,
+      "causes": [
+        "Convective weather blocks eastern corridor",
+        "22 flights converge through high-altitude sector",
+        "Utilization peaks at 118% of capacity"
+      ]
+    },
+    {
+      "id": "risk_high144",
+      "sector_id": "HIGH_144",
+      "altitude_band": "HIGH",
+      "peak_time": "2025-08-21T18:48:00Z",
+      "risk_score": 61,
+      "utilization_pct": 83,
+      "affected_flight_count": 15,
+      "projected_delay_minutes": 64,
+      "causes": ["Adjacent to HIGH_142 overflow", "Rising demand on westbound reroute path"]
+    }
+  ]
+}

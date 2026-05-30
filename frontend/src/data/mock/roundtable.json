@@ -1,0 +1,41 @@
+{
+  "question": "What's the risk on HIGH_142 and what should I do?",
+  "agent_responses": [
+    {
+      "agent": "Air Marshal",
+      "response": "HIGH_142 hits 118% capacity in 18 minutes. 21 flights against a capacity of 18, three over. 22 flights are converging through the single high-altitude sector.",
+      "evidence": ["count 21 vs capacity 18", "peak 18:33Z", "overload 3 flights"],
+      "severity": "alert"
+    },
+    {
+      "agent": "Weather Boy",
+      "response": "A convective line is blocking the eastern corridor with echo tops at 44,000 ft and reflectivity up to 52 dBZ. It is forcing eastbound traffic into HIGH_142.",
+      "evidence": ["refc 52 dBZ", "echo top 44,000 ft", "blocks 3 filed routes"],
+      "severity": "alert"
+    },
+    {
+      "agent": "Domino",
+      "response": "If unmitigated, arrival banks at ORD and EWR inherit roughly 247 minutes of delay, and HIGH_144 pressure rises next.",
+      "evidence": ["+247 projected delay min", "ORD and EWR arrival banks exposed"],
+      "severity": "watch"
+    },
+    {
+      "agent": "Historian",
+      "response": "8 similar scenarios on record. A western reroute worked 83% of the time with an average delay reduction of 18%. Closest match is 2025-08-13.",
+      "evidence": ["8 matches", "83% success rate", "avg delay reduction 18%"],
+      "severity": "info"
+    },
+    {
+      "agent": "Auditor",
+      "response": "Caution: storm propagation is running 38% faster than the matched precedent, so I have lowered historical confidence from 91% to 87%. The precedent only partially applies.",
+      "evidence": ["divergence detected", "confidence 91% to 87%"],
+      "severity": "watch"
+    }
+  ],
+  "synthesis": {
+    "agent": "Jarvis",
+    "answer": "HIGH_142 breaches in 18 minutes, driven by a fast-moving storm pushing traffic east. Recommend metering westbound flow before the peak: it clears the breach to ~96% and cuts delay ~21%, but watch HIGH_144 climbing to ~95%. Confidence 87%, reduced because the storm is outrunning the historical analog.",
+    "recommendation_id": "rec_west_reroute"
+  },
+  "generated_at": "2025-08-21T18:15:09Z"
+}
