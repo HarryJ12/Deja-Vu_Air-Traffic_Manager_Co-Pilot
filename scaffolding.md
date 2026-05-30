@@ -633,6 +633,154 @@ MVP behavior:
 - Make the preview plausible and clearly labeled as a forecast simulation.
 - Do not claim real rerouting optimization unless implemented.
 
+### POST `/api/actions/decision`
+
+Used by Accept, Modify, and Reject on action cards.
+
+Request:
+
+```ts
+type ActionDecisionRequest = {
+  scenario_id: string;
+  time_bin_id: string;
+  recommendation_id: string;
+  decision: "accept" | "modify" | "reject";
+  operator_note?: string;
+};
+```
+
+Response:
+
+```ts
+type ActionDecisionResponse = {
+  recommendation_id: string;
+  decision: "accept" | "modify" | "reject";
+  status: "recorded" | "needs_modification" | "rejected";
+  message: string;
+  next_step: string;
+};
+```
+
+Button behavior:
+
+- Preview shows a simulated before/after forecast delta.
+- Accept records the simulated operator choice and keeps monitoring active.
+- Modify opens the meeting room or modification panel with the returned `next_step`.
+- Reject records the rejection and leaves the risk visible for monitoring.
+- None of these buttons claim to execute a real operational air traffic action.
+
+### GET `/api/agents/roster`
+
+Returns agent metadata for draggable tabs/chips.
+
+Response:
+
+```ts
+type AgentRosterResponse = {
+  agents: AgentCard[];
+  note: string;
+};
+
+type AgentCard = {
+  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Risko";
+  role: string;
+  short_label: string;
+  default_room: "jarvis" | "meeting_room";
+  can_speak_in_default: boolean;
+  meeting_room_only: boolean;
+  voice_id: string | null;
+  default_position: { x: number; y: number };
+  responsibilities: string[];
+};
+```
+
+Frontend behavior:
+
+- Render the agent tabs/chips from this endpoint.
+- Store drag positions in frontend state or local storage.
+- Jarvis can be active on the main screen.
+- Specialist agents become directly interactive only in the meeting room.
+
+### GET `/api/scenarios/{scenario_id}/map/inspect?time_bin_id=...&lat=...&lon=...&altitude_ft=...`
+
+Used when the operator clicks empty space or a point on the Forecast Scope.
+
+Response:
+
+```ts
+type MapInspectionResponse = {
+  scenario_id: string;
+  time_bin: TimeBin;
+  location: { lat: number; lon: number; altitude_ft: number | null };
+  sectors: SectorMapSummary[];
+  weather: WeatherSample;
+  nearby_flights: NearbyFlight[];
+  matching_risks: RiskSummary[];
+  recommended_agents: Array<"Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Risko">;
+  narrative: string;
+};
+
+type SectorMapSummary = {
+  sector_id: string;
+  altitude_band: "LOW" | "HIGH";
+  capacity: number;
+  count: number;
+  utilization_pct: number;
+  overload_count: number;
+};
+
+type WeatherSample = {
+  refc_dbz: number | null;
+  retop_ft: number | null;
+  conflict_at_altitude: boolean | null;
+  severity: "none" | "watch" | "alert" | "nodata";
+};
+
+type NearbyFlight = {
+  flight_id: string;
+  flight_number: string;
+  distance_nm: number;
+  lat: number;
+  lon: number;
+  altitude_ft: number;
+  origin: string;
+  destination: string;
+  sector_id: string | null;
+  weather_conflict: boolean;
+};
+```
+
+Frontend behavior:
+
+- Click the map to show a small inspection panel.
+- Use `recommended_agents` to suggest who can explain the click.
+- If the operator clicks while not in the meeting room, route explanation through Jarvis.
+- If the operator is in the meeting room, allow the recommended specialist agents to speak directly.
+
+### GET `/api/scenarios/{scenario_id}/sectors/{sector_id}/detail?time_bin_id=...`
+
+Used when the operator clicks a sector.
+
+Returns:
+
+- occupancy and utilization
+- contributing active flights
+- weather conflicts inside the sector
+- matching risks
+- recommended agents
+
+### GET `/api/scenarios/{scenario_id}/flights/detail?time_bin_id=...&flight_id=...`
+
+Used when the operator clicks a flight.
+
+Returns:
+
+- current estimated flight position
+- current sector
+- weather sample at the aircraft position
+- planned route waypoints
+- recommended agents
+
 ### POST `/api/voice/transcribe`
 
 Used for operator push-to-talk input.
@@ -805,27 +953,27 @@ Single-screen operational app. No marketing landing page.
 ```text
 +---------------------------------------------------------------+
 | TopBar: Scenario selector | Time | Voice button | Status       |
-+----------------------+----------------------------------------+
-| TacticalMap          | SituationBrief                         |
-|                      | AgentPanel                             |
-| Sectors/weather      | RiskQueue                              |
-| routes/flights       | ActionCards                            |
-|                      |                                        |
-+----------------------+----------------------------------------+
++------------------+----------------------------+---------------+
+| RiskQueue        | Forecast Scope             | SituationBrief|
+| ActionCards      | sectors/weather/flights    | AgentPanel    |
+|                  | draggable agent tabs       | Meeting Room  |
++------------------+----------------------------+---------------+
 | TimeWarpSlider                                                |
 +---------------------------------------------------------------+
 ```
 
 Desktop layout:
 
-- Left: map, 60 to 65 percent width.
-- Right: briefing and actions, 35 to 40 percent width.
+- Center: Forecast Scope, 50 to 60 percent width.
+- Left: risk queue and action cards.
+- Right: Jarvis brief, agent panel, and meeting-room controls.
 - Bottom: Time Warp timeline.
+- Agent tabs/chips may float over the Forecast Scope and be draggable.
 
 Mobile or narrow layout:
 
 - Top: Situation Brief.
-- Middle: map.
+- Middle: Forecast Scope.
 - Bottom: tabs for Agents, Risks, Actions.
 
 ## Frontend State

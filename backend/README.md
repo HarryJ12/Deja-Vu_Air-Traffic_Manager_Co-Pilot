@@ -60,6 +60,35 @@ Agent voice environment variables:
 
 Until those are provided, all agents fall back to the default ElevenLabs voice ID.
 
+## Forecast Scope Interactions
+
+Agent roster:
+
+- `GET /api/agents/roster`
+- Returns Jarvis plus the meeting-room agents, default draggable positions, labels, roles, and voice IDs.
+
+Map point click:
+
+- `GET /api/scenarios/{scenario_id}/map/inspect?time_bin_id=...&lat=...&lon=...&altitude_ft=...`
+- Returns sectors at that point, weather sample, nearby flights, matching risks, and recommended agents.
+
+Sector click:
+
+- `GET /api/scenarios/{scenario_id}/sectors/{sector_id}/detail?time_bin_id=...`
+- Returns sector occupancy, contributing flights, conflicts, risks, and recommended agents.
+
+Flight click:
+
+- `GET /api/scenarios/{scenario_id}/flights/detail?time_bin_id=...&flight_id=...`
+- Returns current flight position, sector, weather sample, route waypoints, and recommended agents.
+
+Action card buttons:
+
+- Preview: `POST /api/actions/preview`
+- Accept / Modify / Reject: `POST /api/actions/decision`
+
+These endpoints do not execute real air traffic actions. They record the operator decision and return the next UI step for the demo.
+
 ## Local Data
 
 The backend auto-detects the bundle in this order:

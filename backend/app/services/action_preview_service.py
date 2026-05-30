@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from app.core.schemas import ActionPreviewResponse, PreviewMetrics, SectorDelta
+from app.core.schemas import (
+    ActionDecisionResponse,
+    ActionPreviewResponse,
+    PreviewMetrics,
+    SectorDelta,
+)
 
 from .scenario_service import ScenarioService
 
@@ -62,4 +67,38 @@ class ActionPreviewService:
                 "Preview uses a deterministic simulation heuristic over the bundled data. "
                 "It is suitable for demo comprehension, not operational execution."
             ),
+        )
+
+    def decide(
+        self,
+        scenario_id: str,
+        time_bin_id: str,
+        recommendation_id: str,
+        decision: str,
+        operator_note: str | None = None,
+    ) -> ActionDecisionResponse:
+        # Touch state so invalid scenario/time choices fail instead of recording nonsense.
+        self.scenarios.scenario_state(scenario_id, time_bin_id, include_flights=False)
+        if decision == "accept":
+            return ActionDecisionResponse(
+                recommendation_id=recommendation_id,
+                decision="accept",
+                status="recorded",
+                message="Operator accepted the simulated recommendation.",
+                next_step="Show the previewed forecast delta and keep monitoring downstream sectors.",
+            )
+        if decision == "modify":
+            return ActionDecisionResponse(
+                recommendation_id=recommendation_id,
+                decision="modify",
+                status="needs_modification",
+                message="Operator requested a modification.",
+                next_step=operator_note or "Open the meeting room and ask Jarvis which constraint should change.",
+            )
+        return ActionDecisionResponse(
+            recommendation_id=recommendation_id,
+            decision="reject",
+            status="rejected",
+            message="Operator rejected the simulated recommendation.",
+            next_step="Keep the card in the audit trail and continue monitoring the active risk window.",
         )

@@ -134,6 +134,73 @@ class ScenarioStateResponse(BaseModel):
     risks: list[RiskSummary]
 
 
+class LocationPoint(BaseModel):
+    lat: float
+    lon: float
+    altitude_ft: int | None = None
+
+
+class SectorMapSummary(BaseModel):
+    sector_id: str
+    altitude_band: AltitudeBand
+    capacity: int
+    count: int
+    utilization_pct: float
+    overload_count: int
+
+
+class WeatherSample(BaseModel):
+    refc_dbz: float | None = None
+    retop_ft: float | None = None
+    conflict_at_altitude: bool | None = None
+    severity: Literal["none", "watch", "alert", "nodata"] = "nodata"
+
+
+class NearbyFlight(BaseModel):
+    flight_id: str
+    flight_number: str
+    distance_nm: float
+    lat: float
+    lon: float
+    altitude_ft: int
+    origin: str
+    destination: str
+    sector_id: str | None = None
+    weather_conflict: bool = False
+
+
+class MapInspectionResponse(BaseModel):
+    scenario_id: str
+    time_bin: TimeBin
+    location: LocationPoint
+    sectors: list[SectorMapSummary]
+    weather: WeatherSample
+    nearby_flights: list[NearbyFlight]
+    matching_risks: list[RiskSummary]
+    recommended_agents: list[AgentName]
+    narrative: str
+
+
+class SectorDetailResponse(BaseModel):
+    scenario_id: str
+    time_bin: TimeBin
+    sector: SectorMapSummary
+    contributing_flights: list[FlightPosition]
+    weather_conflicts: list[WeatherConflict]
+    risks: list[RiskSummary]
+    recommended_agents: list[AgentName]
+
+
+class FlightDetailResponse(BaseModel):
+    scenario_id: str
+    time_bin: TimeBin
+    flight: FlightPosition
+    sector_id: str | None
+    weather: WeatherSample
+    route: list[LocationPoint]
+    recommended_agents: list[AgentName]
+
+
 class BriefingResponse(BaseModel):
     mode: Literal["quick", "detailed", "full"]
     headline: str
@@ -171,6 +238,22 @@ class ActionPreviewResponse(BaseModel):
     after: PreviewMetrics
     changed_sectors: list[SectorDelta]
     narrative: str
+
+
+class ActionDecisionRequest(BaseModel):
+    scenario_id: str
+    time_bin_id: str
+    recommendation_id: str
+    decision: Literal["accept", "modify", "reject"]
+    operator_note: str | None = None
+
+
+class ActionDecisionResponse(BaseModel):
+    recommendation_id: str
+    decision: Literal["accept", "modify", "reject"]
+    status: Literal["recorded", "needs_modification", "rejected"]
+    message: str
+    next_step: str
 
 
 class VoiceSynthesisRequest(BaseModel):
@@ -218,4 +301,21 @@ class ChatResponse(BaseModel):
     room: Literal["jarvis", "meeting_room"]
     messages: list[ChatMessage]
     briefing: BriefingResponse
+    note: str
+
+
+class AgentCard(BaseModel):
+    agent: AgentName
+    role: str
+    short_label: str
+    default_room: Literal["jarvis", "meeting_room"]
+    can_speak_in_default: bool
+    meeting_room_only: bool
+    voice_id: str | None = None
+    default_position: dict[str, float]
+    responsibilities: list[str]
+
+
+class AgentRosterResponse(BaseModel):
+    agents: list[AgentCard]
     note: str
