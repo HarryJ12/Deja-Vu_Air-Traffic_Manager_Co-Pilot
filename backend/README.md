@@ -56,8 +56,6 @@ Agent voice environment variables:
 - `ELEVENLABS_VOICE_AIR_MARSHAL`
 - `ELEVENLABS_VOICE_DOMINO`
 - `ELEVENLABS_VOICE_HISTORIAN`
-- `ELEVENLABS_VOICE_RISKO`
-
 Until those are provided, all agents fall back to the default ElevenLabs voice ID.
 
 ## Forecast Scope Interactions

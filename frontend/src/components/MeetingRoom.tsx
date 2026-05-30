@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useStore } from "../state/store";
 import { agentFace, agentRole } from "./agentFaces";
-import type { AgentName, RoundtableAgentResponse } from "../lib/types";
+import type { AgentName, ChatMessage } from "../lib/types";
 
 const SUGGESTIONS = [
   "What's the risk on HIGH_142 and what should I do?",
@@ -16,7 +16,6 @@ const SEATS: { agent: Exclude<AgentName, "Jarvis">; pos: React.CSSProperties }[]
   { agent: "Weather Boy", pos: { right: "3%", top: "26%" } },
   { agent: "Domino", pos: { left: "3%", top: "62%" } },
   { agent: "Historian", pos: { right: "3%", top: "62%" } },
-  { agent: "Auditor", pos: { left: "50%", top: "70%", transform: "translateX(-50%)" } },
 ];
 
 export default function MeetingRoom() {
@@ -24,7 +23,7 @@ export default function MeetingRoom() {
     meetingRoom,
     closeMeetingRoom,
     setMeetingQuestion,
-    askRoundtable,
+    askMeetingRoom,
     briefing,
     showToast,
     previewAction,
@@ -42,18 +41,21 @@ export default function MeetingRoom() {
   if (!meetingRoom.open) return null;
 
   const { question, loading, error, responses } = meetingRoom;
-  const submit = () => question.trim() && askRoundtable(question);
+  const submit = () => question.trim() && askMeetingRoom(question);
 
-  const byAgent = new Map<string, RoundtableAgentResponse>();
-  responses?.agent_responses.forEach((r) => byAgent.set(r.agent, r));
+  const byAgent = new Map<string, ChatMessage>();
+  responses?.messages
+    .filter((m) => m.role === "agent" && m.agent && m.agent !== "Jarvis")
+    .forEach((m) => byAgent.set(m.agent!, m));
+  const jarvisMessage = responses?.messages.find((m) => m.agent === "Jarvis");
 
-  const synthRecId = responses?.synthesis.recommendation_id ?? null;
+  const synthRecId = responses?.briefing.recommendations[0]?.id ?? null;
   const recExists = !!briefing?.recommendations.find((r) => r.id === synthRecId);
 
   const seatBody = (agent: Exclude<AgentName, "Jarvis">) => {
     const r = byAgent.get(agent);
     if (loading) return <div className="skeleton skeleton-line" style={{ width: "90%" }} />;
-    if (r) return <p className="seat-line">{r.response}</p>;
+    if (r) return <p className="seat-line">{r.content}</p>;
     return <p className="seat-line text-dim">Standing by…</p>;
   };
 
@@ -85,7 +87,7 @@ export default function MeetingRoom() {
             </div>
             <div className="seat-bubble jarvis-bubble">
               {loading && <div className="skeleton skeleton-line" style={{ width: "80%" }} />}
-              {!loading && responses && <p className="seat-line">{responses.synthesis.answer}</p>}
+              {!loading && responses && <p className="seat-line">{jarvisMessage?.content ?? responses.note}</p>}
               {!loading && !responses && <p className="seat-line text-dim">Ask the room to begin.</p>}
               {!loading && responses && synthRecId && (
                 <button
@@ -124,7 +126,7 @@ export default function MeetingRoom() {
           })}
         </div>
 
-        {error && <div className="state-msg error room-error">Roundtable failed: {error}</div>}
+        {error && <div className="state-msg error room-error">Meeting room failed: {error}</div>}
 
         {!responses && !loading && (
           <div className="room-suggestions">
@@ -134,7 +136,7 @@ export default function MeetingRoom() {
                 className="suggestion-chip"
                 onClick={() => {
                   setMeetingQuestion(s);
-                  askRoundtable(s);
+                  askMeetingRoom(s);
                 }}
               >
                 {s}

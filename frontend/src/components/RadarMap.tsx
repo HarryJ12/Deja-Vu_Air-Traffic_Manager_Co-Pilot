@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useStore } from "../state/store";
 import { VIEW } from "../lib/projection";
 import { AIRPORTS, airportName, airportCity, flightDisplayName } from "../lib/airports";
-import type { FlightPosition } from "../lib/types";
+import type { FlightDetailResponse, FlightPosition, MapInspectionResponse } from "../lib/types";
 import LayerControls from "./LayerControls";
 
 const GREEN = "#2fe06a";
@@ -18,6 +18,17 @@ function radarProject(lon: number, lat: number, cx: number, cy: number, R: numbe
   const nx = (lon - lonMid) / ((VIEW.lonMax - VIEW.lonMin) / 2);
   const ny = (lat - latMid) / ((VIEW.latMax - VIEW.latMin) / 2);
   return { x: cx + nx * R * 0.72, y: cy - ny * R * 0.72 };
+}
+
+function radarUnproject(x: number, y: number, cx: number, cy: number, R: number) {
+  const lonMid = (VIEW.lonMin + VIEW.lonMax) / 2;
+  const latMid = (VIEW.latMin + VIEW.latMax) / 2;
+  const nx = (x - cx) / (R * 0.72);
+  const ny = (cy - y) / (R * 0.72);
+  return {
+    lon: lonMid + nx * ((VIEW.lonMax - VIEW.lonMin) / 2),
+    lat: latMid + ny * ((VIEW.latMax - VIEW.latMin) / 2),
+  };
 }
 
 function drawPlane(ctx: CanvasRenderingContext2D, angle: number, color: string) {
@@ -66,8 +77,14 @@ export default function RadarMap() {
     layers,
     selectedFlightId,
     selectedTowerId,
+    mapInspection,
+    flightDetail,
+    inspectionStatus,
     selectFlight,
     selectTower,
+    inspectMap,
+    loadFlightDetail,
+    clearInspection,
   } = useStore();
 
   useEffect(() => {
@@ -187,7 +204,15 @@ export default function RadarMap() {
 
       // Weather cells
       if (layers.weather) {
-        for (const p of state?.weather_tiles?.[0]?.points ?? []) {
+        const weatherPoints =
+          state?.weather_tiles?.[0]?.points ??
+          (state?.weather_conflicts ?? []).map((c) => ({
+            lat: c.lat,
+            lon: c.lon,
+            refc_dbz: c.refc_dbz,
+            retop_ft: c.retop_ft,
+          }));
+        for (const p of weatherPoints) {
           const { x, y } = radarProject(p.lon, p.lat, cx, cy, R);
           const a = Math.max(0.12, Math.min(0.5, (p.refc_dbz - 30) / 50));
           const size = 10 + (p.refc_dbz - 40) * 0.4;
@@ -266,6 +291,8 @@ export default function RadarMap() {
     const f = flightHits.current.find(near);
     if (f) {
       selectFlight(f.id === selectedFlightId ? null : f.id);
+      clearInspection();
+      if (f.id !== selectedFlightId) loadFlightDetail(f.id);
       return;
     }
     const t = towerHits.current.find(near);
@@ -275,6 +302,16 @@ export default function RadarMap() {
     }
     selectFlight(null);
     selectTower(null);
+    clearInspection();
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    const cx = w / 2;
+    const cy = h / 2;
+    const R = Math.min(w, h) / 2 - 28;
+    if (R > 0 && Math.hypot(px - cx, py - cy) <= R) {
+      const point = radarUnproject(px, py, cx, cy, R);
+      inspectMap(point.lat, point.lon);
+    }
   };
 
   const selFlight = state?.flights.find((f) => f.flight_id === selectedFlightId) ?? null;
@@ -286,7 +323,17 @@ export default function RadarMap() {
 
       <LayerControls />
 
-      {selFlight && <FlightCard f={selFlight} onClose={() => selectFlight(null)} />}
+      {selFlight && (
+        <FlightCard
+          f={selFlight}
+          detail={flightDetail}
+          loading={inspectionStatus.loading}
+          onClose={() => {
+            selectFlight(null);
+            clearInspection();
+          }}
+        />
+      )}
       {selTower && (
         <TowerCard
           icao={selTower.icao}
@@ -302,11 +349,24 @@ export default function RadarMap() {
       {stateStatus.loading && (
         <div className="radar-loading monospace">[ acquiring tracks… ]</div>
       )}
+      {mapInspection && (
+        <InspectionCard inspection={mapInspection} onClose={clearInspection} />
+      )}
     </main>
   );
 }
 
-function FlightCard({ f, onClose }: { f: FlightPosition; onClose: () => void }) {
+function FlightCard({
+  f,
+  detail,
+  loading,
+  onClose,
+}: {
+  f: FlightPosition;
+  detail: FlightDetailResponse | null;
+  loading: boolean;
+  onClose: () => void;
+}) {
   return (
     <div className="radar-card">
       <div className="info-block-row">
@@ -325,6 +385,44 @@ function FlightCard({ f, onClose }: { f: FlightPosition; onClose: () => void }) 
         {f.origin} → {f.destination}
         <br />
         FL{Math.round(f.altitude_ft / 100)} · {f.speed_kt} KT
+      </div>
+      {loading && <div className="text-dim monospace" style={{ marginTop: 8 }}>[ inspecting flight… ]</div>}
+      {detail && (
+        <div className="text-dim monospace" style={{ marginTop: 8 }}>
+          Sector {detail.sector_id ?? "outside sector"}
+          <br />
+          WX {detail.weather.severity.toUpperCase()} · {detail.route.length} route pts
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InspectionCard({
+  inspection,
+  onClose,
+}: {
+  inspection: MapInspectionResponse;
+  onClose: () => void;
+}) {
+  const sector = inspection.sectors[0];
+  return (
+    <div className="radar-card" style={{ left: 18, right: "auto" }}>
+      <div className="info-block-row">
+        <strong>Scope Inspect</strong>
+        <button className="ghost-btn radar-card-x" onClick={onClose}>
+          ✕
+        </button>
+      </div>
+      <p className="text-dim" style={{ marginTop: 6 }}>
+        {inspection.narrative}
+      </p>
+      <div className="text-dim monospace" style={{ marginTop: 8 }}>
+        {sector ? `${sector.sector_id} · ${Math.round(sector.utilization_pct)}%` : "No sector"}
+        <br />
+        WX {inspection.weather.severity.toUpperCase()}
+        <br />
+        {inspection.nearby_flights.length} nearby flights
       </div>
     </div>
   );

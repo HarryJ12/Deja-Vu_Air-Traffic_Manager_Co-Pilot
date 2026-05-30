@@ -14,7 +14,7 @@ export default function BriefToken({ initial, z }: { initial: Pos; z: React.Muta
   const [open, setOpen] = useState(false);
   const [full, setFull] = useState(false);
 
-  const alert = briefing ? briefing.primary_risk.utilization_pct >= 100 : false;
+  const alert = briefing?.primary_risk ? briefing.primary_risk.utilization_pct >= 100 : false;
 
   return (
     <div
@@ -90,19 +90,25 @@ export default function BriefToken({ initial, z }: { initial: Pos; z: React.Muta
 
                 <h3 style={{ marginTop: 8 }}>Cause</h3>
                 <ul>
-                  {briefing.primary_risk.causes.map((c, i) => (
+                  {(briefing.primary_risk?.causes ?? []).map((c, i) => (
                     <li key={i}>{c}</li>
                   ))}
                 </ul>
 
                 <h3 style={{ marginTop: 8 }}>Impact</h3>
                 <ul>
-                  <li>{count(briefing.primary_risk.affected_flight_count)} affected flights.</li>
-                  <li>{minutes(briefing.primary_risk.projected_delay_minutes)} delay (heuristic).</li>
-                  <li>
-                    Peak {pct(briefing.primary_risk.utilization_pct)} at{" "}
-                    {clockZ(briefing.primary_risk.peak_time)}.
-                  </li>
+                  {briefing.primary_risk ? (
+                    <>
+                      <li>{count(briefing.primary_risk.affected_flight_count)} affected flights.</li>
+                      <li>{minutes(briefing.primary_risk.projected_delay_minutes)} delay (heuristic).</li>
+                      <li>
+                        Peak {pct(briefing.primary_risk.utilization_pct)} at{" "}
+                        {clockZ(briefing.primary_risk.peak_time)}.
+                      </li>
+                    </>
+                  ) : (
+                    <li>No primary risk selected for this time bin.</li>
+                  )}
                 </ul>
 
                 <button
@@ -110,7 +116,9 @@ export default function BriefToken({ initial, z }: { initial: Pos; z: React.Muta
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={() =>
                     openMeetingRoom(
-                      `What's the risk on ${briefing.primary_risk.sector_id} and what should I do?`
+                      briefing.primary_risk
+                        ? `What's the risk on ${briefing.primary_risk.sector_id} and what should I do?`
+                        : "What should I watch in this time bin?"
                     )
                   }
                 >

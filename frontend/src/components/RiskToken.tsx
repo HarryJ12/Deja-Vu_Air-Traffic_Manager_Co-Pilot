@@ -5,7 +5,7 @@ import { pct, minutes, clockZ, utilSeverity } from "../lib/format";
 
 // Risk Queue as a compact draggable token. Collapsed = count + top risk.
 export default function RiskToken({ initial, z }: { initial: Pos; z: React.MutableRefObject<number> }) {
-  const { state, selectedRiskId, selectRisk } = useStore();
+  const { state, selectedRiskId, selectRisk, loadSectorDetail } = useStore();
   const { containerRef, style, handleProps } = useDrag(initial, z);
   const [open, setOpen] = useState(false);
   const risks = state?.risks ?? [];
@@ -47,10 +47,18 @@ export default function RiskToken({ initial, z }: { initial: Pos; z: React.Mutab
                 className={`risk-item ${sev === "alert" ? "alert" : ""} ${selected ? "selected" : ""}`}
                 style={{ marginTop: 8 }}
                 onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => selectRisk(selected ? null : r.id)}
+                onClick={() => {
+                  selectRisk(selected ? null : r.id);
+                  if (!selected) loadSectorDetail(r.sector_id);
+                }}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && selectRisk(selected ? null : r.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    selectRisk(selected ? null : r.id);
+                    if (!selected) loadSectorDetail(r.sector_id);
+                  }
+                }}
               >
                 <div className="info-block-row" style={{ marginBottom: 4 }}>
                   <strong>{r.sector_id}</strong>

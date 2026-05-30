@@ -1,31 +1,6 @@
 from __future__ import annotations
 
-from .schemas import AgentFinding, ConfidenceBlock, DivergenceAlarm, RiskSummary, WeatherConflict
-
-
-def risko_findings(risk: RiskSummary | None, conflicts: list[WeatherConflict]) -> AgentFinding:
-    if risk is None:
-        return AgentFinding(
-            agent="Risko",
-            severity="info",
-            title="No alert-level weakness",
-            detail="The current snapshot does not require a recommendation beyond monitoring.",
-            evidence=["Continue to re-check as the Time Warp slider advances."],
-        )
-
-    weaknesses = [
-        "Flight dynamics are simplified to constant cruise altitude and speed.",
-        "Historical outcomes are mocked because real interventions are not in the dataset.",
-    ]
-    if conflicts:
-        weaknesses.append("Weather impact uses reflectivity and echo tops only; winds and turbulence are absent.")
-    return AgentFinding(
-        agent="Risko",
-        severity="watch" if risk.risk_score < 90 else "alert",
-        title="Recommendation is plausible but bounded",
-        detail="The recommendation is explainable from bundle data, but should be treated as decision support.",
-        evidence=weaknesses,
-    )
+from .schemas import ConfidenceBlock, DivergenceAlarm, RiskSummary, WeatherConflict
 
 
 def confidence_block(risk: RiskSummary | None, conflicts: list[WeatherConflict]) -> ConfidenceBlock:

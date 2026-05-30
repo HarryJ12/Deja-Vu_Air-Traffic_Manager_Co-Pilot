@@ -10,8 +10,7 @@ export type AgentName =
   | "Weather Boy"
   | "Air Marshal"
   | "Domino"
-  | "Historian"
-  | "Auditor";
+  | "Historian";
 
 export type ActionType =
   | "reroute"
@@ -37,6 +36,7 @@ export type TimeBin = {
   valid_from: string;
   valid_to: string;
   label: string;
+  based_at?: string;
 };
 
 /* ---- Geo / sectors ---- */
@@ -68,6 +68,7 @@ export type FlightPosition = {
   speed_kt: number;
   origin: string;
   destination: string;
+  progress_pct?: number;
 };
 
 export type SectorOccupancy = {
@@ -94,7 +95,11 @@ export type WeatherConflict = {
 };
 
 export type WeatherOverlayRef = {
-  kind: "points" | "png";
+  kind: "points" | "png" | "refc" | "retop";
+  valid_from?: string;
+  valid_to?: string;
+  max_value?: number | null;
+  conflict_count?: number;
   url?: string;
   points?: { lat: number; lon: number; refc_dbz: number; retop_ft: number }[];
 };
@@ -168,7 +173,7 @@ export type BriefingResponse = {
   mode: BriefingMode;
   headline: string;
   summary: string;
-  primary_risk: RiskSummary;
+  primary_risk: RiskSummary | null;
   agents: AgentFinding[];
   recommendations: RecommendationCard[];
   confidence: ConfidenceBlock;
@@ -204,27 +209,128 @@ export type ActionPreviewResponse = {
   narrative: string;
 };
 
-/* ---- Agent Meeting Room (NEW) ---- */
-export type RoundtableRequest = {
+export type ActionDecisionRequest = {
   scenario_id: string;
   time_bin_id: string;
-  question: string;
+  recommendation_id: string;
+  decision: "accept" | "modify" | "reject";
+  operator_note?: string;
 };
 
-export type RoundtableAgentResponse = {
-  agent: Exclude<AgentName, "Jarvis">;
-  response: string;
-  evidence: string[];
+export type ActionDecisionResponse = {
+  recommendation_id: string;
+  decision: "accept" | "modify" | "reject";
+  status: "recorded" | "needs_modification" | "rejected";
+  message: string;
+  next_step: string;
+};
+
+export type LocationPoint = {
+  lat: number;
+  lon: number;
+  altitude_ft: number | null;
+};
+
+export type SectorMapSummary = {
+  sector_id: string;
+  altitude_band: AltitudeBand;
+  capacity: number;
+  count: number;
+  utilization_pct: number;
+  overload_count: number;
+};
+
+export type WeatherSample = {
+  refc_dbz: number | null;
+  retop_ft: number | null;
+  conflict_at_altitude: boolean | null;
+  severity: "none" | "watch" | "alert" | "nodata";
+};
+
+export type NearbyFlight = {
+  flight_id: string;
+  flight_number: string;
+  distance_nm: number;
+  lat: number;
+  lon: number;
+  altitude_ft: number;
+  origin: string;
+  destination: string;
+  sector_id: string | null;
+  weather_conflict: boolean;
+};
+
+export type MapInspectionResponse = {
+  scenario_id: string;
+  time_bin: TimeBin;
+  location: LocationPoint;
+  sectors: SectorMapSummary[];
+  weather: WeatherSample;
+  nearby_flights: NearbyFlight[];
+  matching_risks: RiskSummary[];
+  recommended_agents: AgentName[];
+  narrative: string;
+};
+
+export type FlightDetailResponse = {
+  scenario_id: string;
+  time_bin: TimeBin;
+  flight: FlightPosition;
+  sector_id: string | null;
+  weather: WeatherSample;
+  route: LocationPoint[];
+  recommended_agents: AgentName[];
+};
+
+export type SectorDetailResponse = {
+  scenario_id: string;
+  time_bin: TimeBin;
+  sector: SectorMapSummary;
+  contributing_flights: FlightPosition[];
+  weather_conflicts: WeatherConflict[];
+  risks: RiskSummary[];
+  recommended_agents: AgentName[];
+};
+
+export type ChatRequest = {
+  scenario_id: string;
+  time_bin_id: string;
+  message: string;
+};
+
+export type MeetingRoomChatRequest = ChatRequest & {
+  requested_agents?: AgentName[];
+};
+
+export type ChatMessage = {
+  role: "operator" | "agent";
+  agent: AgentName | null;
+  content: string;
   severity: Severity;
+  voice_id: string | null;
+  source: string | null;
 };
 
-export type RoundtableResponse = {
-  question: string;
-  agent_responses: RoundtableAgentResponse[];
-  synthesis: {
-    agent: "Jarvis";
-    answer: string;
-    recommendation_id: string | null;
-  };
-  generated_at: string;
+export type ChatResponse = {
+  room: "jarvis" | "meeting_room";
+  messages: ChatMessage[];
+  briefing: BriefingResponse;
+  note: string;
+};
+
+export type AgentCard = {
+  agent: AgentName;
+  role: string;
+  short_label: string;
+  default_room: "jarvis" | "meeting_room";
+  can_speak_in_default: boolean;
+  meeting_room_only: boolean;
+  voice_id: string | null;
+  default_position: { x: number; y: number };
+  responsibilities: string[];
+};
+
+export type AgentRosterResponse = {
+  agents: AgentCard[];
+  note: string;
 };

@@ -53,16 +53,6 @@ const FACES: Record<string, JSX.Element> = {
       <path d="M24 45 q8 5 15 0" />
     </svg>
   ),
-  Auditor: (
-    <svg {...svgProps}>
-      <circle cx="32" cy="34" r="19" />
-      <path d="M22 30 h8" />
-      <path d="M36 27 l9 -2" />
-      <path d="M23 36 h5" />
-      <path d="M37 36 h5" />
-      <path d="M25 47 q7 -3 14 0" />
-    </svg>
-  ),
   Jarvis: (
     <svg {...svgProps}>
       <circle cx="32" cy="34" r="19" />
@@ -78,7 +68,6 @@ const ROLES: Record<string, string> = {
   "Weather Boy": "Met Impact",
   Domino: "Network",
   Historian: "Precedent",
-  Auditor: "Confidence",
   Jarvis: "Moderator",
 };
 

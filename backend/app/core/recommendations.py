@@ -14,7 +14,7 @@ def recommendations_for_risk(risk: RiskSummary | None, flight_ids: list[str]) ->
                 expected_impact="Maintains current flow while the forecast updates.",
                 confidence_pct=76,
                 affected_flight_ids=[],
-                agent_contributors=["Jarvis", "Risko"],
+                agent_contributors=["Jarvis"],
                 risks=["Low-risk state can change as weather evolves."],
             )
         ]
@@ -29,7 +29,7 @@ def recommendations_for_risk(risk: RiskSummary | None, flight_ids: list[str]) ->
             expected_impact=f"Targets roughly {max(10, risk.projected_delay_minutes // 3)} minutes of avoidable delay.",
             confidence_pct=max(55, min(90, int(92 - risk.risk_score / 4))),
             affected_flight_ids=affected,
-            agent_contributors=["Air Marshal", "Domino", "Risko"],
+            agent_contributors=["Air Marshal", "Domino"],
             risks=["May shift pressure to adjacent downstream sectors."],
         ),
         RecommendationCard(
@@ -40,7 +40,7 @@ def recommendations_for_risk(risk: RiskSummary | None, flight_ids: list[str]) ->
             expected_impact="Reduces peak concentration while preserving operator approval.",
             confidence_pct=max(50, min(86, int(84 - risk.risk_score / 6))),
             affected_flight_ids=affected[:10],
-            agent_contributors=["Weather Boy", "Air Marshal", "Historian", "Risko"],
+            agent_contributors=["Weather Boy", "Air Marshal", "Historian"],
             risks=["Reroute benefit is simulated with bundle data, not certified optimization."],
         ),
     ]
@@ -54,7 +54,7 @@ def recommendations_for_risk(risk: RiskSummary | None, flight_ids: list[str]) ->
                 expected_impact="Reduces local complexity if neighboring sectors can absorb the traffic.",
                 confidence_pct=62,
                 affected_flight_ids=affected[:8],
-                agent_contributors=["Air Marshal", "Risko"],
+                agent_contributors=["Air Marshal"],
                 risks=["Dataset has cruise altitude only, so climb/descent effects are approximated."],
             )
         )

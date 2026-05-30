@@ -7,7 +7,12 @@ import type {
   BriefingResponse,
   BriefingMode,
   ActionPreviewResponse,
-  RoundtableResponse,
+  ActionDecisionResponse,
+  ChatResponse,
+  MapInspectionResponse,
+  FlightDetailResponse,
+  SectorDetailResponse,
+  AgentRosterResponse,
 } from "../lib/types";
 
 type Async = { loading: boolean; error: string | null };
@@ -24,7 +29,7 @@ type MeetingRoom = {
   question: string;
   loading: boolean;
   error: string | null;
-  responses: RoundtableResponse | null;
+  responses: ChatResponse | null;
 };
 
 type Toast = { id: number; message: string } | null;
@@ -47,6 +52,11 @@ type AppState = {
   state: ScenarioStateResponse | null;
   briefing: BriefingResponse | null;
   preview: ActionPreviewResponse | null;
+  actionDecision: ActionDecisionResponse | null;
+  agentRoster: AgentRosterResponse | null;
+  mapInspection: MapInspectionResponse | null;
+  flightDetail: FlightDetailResponse | null;
+  sectorDetail: SectorDetailResponse | null;
 
   // async status
   scenariosStatus: Async;
@@ -54,6 +64,8 @@ type AppState = {
   stateStatus: Async;
   briefingStatus: Async;
   previewStatus: Async;
+  actionStatus: Async;
+  inspectionStatus: Async;
 
   meetingRoom: MeetingRoom;
   toast: Toast;
@@ -70,13 +82,22 @@ type AppState = {
   toggleAlarmSound: () => void;
   setBriefingMode: (mode: BriefingMode) => void;
   previewAction: (recommendationId: string) => Promise<void>;
+  decideAction: (
+    recommendationId: string,
+    decision: "accept" | "modify" | "reject",
+    operatorNote?: string
+  ) => Promise<void>;
   clearPreview: () => void;
+  inspectMap: (lat: number, lon: number, altitudeFt?: number) => Promise<void>;
+  loadFlightDetail: (flightId: string) => Promise<void>;
+  loadSectorDetail: (sectorId: string) => Promise<void>;
+  clearInspection: () => void;
   showToast: (message: string) => void;
 
   openMeetingRoom: (prefill?: string) => void;
   closeMeetingRoom: () => void;
   setMeetingQuestion: (q: string) => void;
-  askRoundtable: (question: string) => Promise<void>;
+  askMeetingRoom: (question: string) => Promise<void>;
 };
 
 const idle: Async = { loading: false, error: null };
@@ -97,12 +118,19 @@ export const useStore = create<AppState>((set, get) => ({
   state: null,
   briefing: null,
   preview: null,
+  actionDecision: null,
+  agentRoster: null,
+  mapInspection: null,
+  flightDetail: null,
+  sectorDetail: null,
 
   scenariosStatus: { ...idle },
   summaryStatus: { ...idle },
   stateStatus: { ...idle },
   briefingStatus: { ...idle },
   previewStatus: { ...idle },
+  actionStatus: { ...idle },
+  inspectionStatus: { ...idle },
 
   meetingRoom: { open: false, question: "", loading: false, error: null, responses: null },
   toast: null,
@@ -111,7 +139,8 @@ export const useStore = create<AppState>((set, get) => ({
     set({ scenariosStatus: { loading: true, error: null } });
     try {
       const { scenarios } = await api.getScenarios();
-      set({ scenarios, scenariosStatus: { ...idle } });
+      const agentRoster = await api.getAgentRoster();
+      set({ scenarios, agentRoster, scenariosStatus: { ...idle } });
       if (scenarios.length) await get().selectScenario(scenarios[0].id);
     } catch (e) {
       set({ scenariosStatus: { loading: false, error: String(e) } });
@@ -124,6 +153,11 @@ export const useStore = create<AppState>((set, get) => ({
       selectedRiskId: null,
       selectedSectorId: null,
       selectedFlightId: null,
+      mapInspection: null,
+      flightDetail: null,
+      sectorDetail: null,
+      preview: null,
+      actionDecision: null,
       summaryStatus: { loading: true, error: null },
     });
     try {
@@ -148,7 +182,17 @@ export const useStore = create<AppState>((set, get) => ({
         api.getState(scenarioId, id),
         api.getBriefing(scenarioId, id),
       ]);
-      set({ state, briefing, stateStatus: { ...idle }, briefingStatus: { ...idle } });
+      set({
+        state,
+        briefing,
+        mapInspection: null,
+        flightDetail: null,
+        sectorDetail: null,
+        preview: null,
+        actionDecision: null,
+        stateStatus: { ...idle },
+        briefingStatus: { ...idle },
+      });
     } catch (e) {
       set({
         stateStatus: { loading: false, error: String(e) },
@@ -192,6 +236,64 @@ export const useStore = create<AppState>((set, get) => ({
   },
   clearPreview: () => set({ preview: null }),
 
+  decideAction: async (recommendationId, decision, operatorNote) => {
+    const { scenarioId, timeBinId } = get();
+    if (!scenarioId || !timeBinId) return;
+    set({ actionStatus: { loading: true, error: null } });
+    try {
+      const actionDecision = await api.decideAction({
+        scenario_id: scenarioId,
+        time_bin_id: timeBinId,
+        recommendation_id: recommendationId,
+        decision,
+        operator_note: operatorNote,
+      });
+      set({ actionDecision, actionStatus: { ...idle } });
+      get().showToast(actionDecision.message);
+      if (decision === "modify") get().openMeetingRoom(actionDecision.next_step);
+    } catch (e) {
+      set({ actionStatus: { loading: false, error: String(e) } });
+    }
+  },
+
+  inspectMap: async (lat, lon, altitudeFt) => {
+    const { scenarioId, timeBinId } = get();
+    if (!scenarioId || !timeBinId) return;
+    set({ inspectionStatus: { loading: true, error: null } });
+    try {
+      const mapInspection = await api.inspectMap(scenarioId, timeBinId, lat, lon, altitudeFt);
+      set({ mapInspection, flightDetail: null, sectorDetail: null, inspectionStatus: { ...idle } });
+    } catch (e) {
+      set({ inspectionStatus: { loading: false, error: String(e) } });
+    }
+  },
+
+  loadFlightDetail: async (flightId) => {
+    const { scenarioId, timeBinId } = get();
+    if (!scenarioId || !timeBinId) return;
+    set({ inspectionStatus: { loading: true, error: null } });
+    try {
+      const flightDetail = await api.getFlightDetail(scenarioId, timeBinId, flightId);
+      set({ flightDetail, mapInspection: null, sectorDetail: null, inspectionStatus: { ...idle } });
+    } catch (e) {
+      set({ inspectionStatus: { loading: false, error: String(e) } });
+    }
+  },
+
+  loadSectorDetail: async (sectorId) => {
+    const { scenarioId, timeBinId } = get();
+    if (!scenarioId || !timeBinId) return;
+    set({ inspectionStatus: { loading: true, error: null } });
+    try {
+      const sectorDetail = await api.getSectorDetail(scenarioId, timeBinId, sectorId);
+      set({ sectorDetail, mapInspection: null, flightDetail: null, inspectionStatus: { ...idle } });
+    } catch (e) {
+      set({ inspectionStatus: { loading: false, error: String(e) } });
+    }
+  },
+
+  clearInspection: () => set({ mapInspection: null, flightDetail: null, sectorDetail: null }),
+
   showToast: (message) => {
     const id = Date.now();
     set({ toast: { id, message } });
@@ -209,17 +311,17 @@ export const useStore = create<AppState>((set, get) => ({
   setMeetingQuestion: (q) =>
     set((s) => ({ meetingRoom: { ...s.meetingRoom, question: q } })),
 
-  askRoundtable: async (question) => {
+  askMeetingRoom: async (question) => {
     const { scenarioId, timeBinId } = get();
     if (!scenarioId || !timeBinId || !question.trim()) return;
     set((s) => ({
       meetingRoom: { ...s.meetingRoom, loading: true, error: null, responses: null, question },
     }));
     try {
-      const responses = await api.roundtable({
+      const responses = await api.meetingRoomChat({
         scenario_id: scenarioId,
         time_bin_id: timeBinId,
-        question,
+        message: question,
       });
       set((s) => ({ meetingRoom: { ...s.meetingRoom, loading: false, responses } }));
     } catch (e) {

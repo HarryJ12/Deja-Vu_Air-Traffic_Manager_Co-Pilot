@@ -97,7 +97,6 @@ border, `h3` 12px uppercase secondary. Status dots are **square** (`border-radiu
 │  Weather Boy │                              │ Risk Queue                │
 │  Domino      │                              │                           │
 │  Historian   │                              │                           │
-│  Auditor     │                              │                           │
 └──────────────┴──────────────────────────────┴───────────────────────────┘
 ```
 
@@ -137,7 +136,7 @@ frontend/
       scenario-state.json
       briefing.json
       action-preview.json
-      roundtable.json   # NEW — meeting room sample
+      meeting-room.json # meeting room sample
     components/
       TopBar.tsx
       TimeWarpSlider.tsx
@@ -200,10 +199,9 @@ Decided model: **Jarvis-moderated round-table**.
 │ You: "What's the risk on HIGH_142?"          │  ← pinned question + input
 ├─────────────────────────────────────────────┤
 │ Air Marshal  │ 118% cap in 18m, 22 flights   │
-│ Weather Boy  │ Echo top 42k, E corridor      │  ← five agent lanes (AgentRow)
+│ Weather Boy  │ Echo top 42k, E corridor      │  ← four specialist lanes
 │ Domino       │ +247 min, ORD/EWR banks       │
 │ Historian    │ 8 matches, 83% reroute        │
-│ Auditor      │ storm +38% vs precedent       │
 ├─────────────────────────────────────────────┤
 │ JARVIS (synthesis): Meter westbound flow …    │  ← distinct synthesis block
 │                              [ View action → ]│  ← optional link to ActionCard
@@ -219,33 +217,24 @@ Decided model: **Jarvis-moderated round-table**.
    optional deep-link to the relevant Action Card (`recommendation_id`).
 5. `Esc` or `close` returns to the console; the room preserves the last exchange.
 
-**Backend contract (new endpoint — frontend mocks `roundtable.json` first).**
+**Backend contract (frontend mocks `meeting-room.json` first).**
 ```ts
-// POST /api/agents/roundtable
-type RoundtableRequest = {
+// POST /api/chat/meeting-room
+type MeetingRoomChatRequest = {
   scenario_id: string;
   time_bin_id: string;
-  question: string;
+  message: string;
 };
 
-type RoundtableResponse = {
-  question: string;
-  agent_responses: {
-    agent: AgentName;            // "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Auditor"
-    response: string;
-    evidence: string[];
-    severity: "info" | "watch" | "alert";
-  }[];
-  synthesis: {
-    agent: "Jarvis";
-    answer: string;
-    recommendation_id: string | null;
-  };
-  generated_at: string;
+type ChatResponse = {
+  room: "jarvis" | "meeting_room";
+  messages: ChatMessage[];
+  briefing: BriefingResponse;
+  note: string;
 };
 ```
 Reuse the `AgentName` union and `AgentRow` styling from the contract. Add this
-endpoint to `shared/api-contract.md` and ship a `roundtable.json` sample so the
+endpoint to `shared/api-contract.md` and ship a `meeting-room.json` sample so the
 room is fully demoable without the backend.
 
 ---
@@ -268,13 +257,13 @@ type AppState = {
     open: boolean;
     question: string;
     loading: boolean;
-    responses: RoundtableResponse | null;
+    responses: ChatResponse | null;
   };
 };
 ```
 
 Async flags tracked per fetch (scenarios / summary / state / briefing / preview /
-roundtable), each with `loading` + `error` + retry.
+meeting room), each with `loading` + `error` + retry.
 
 ---
 
@@ -282,7 +271,7 @@ roundtable), each with `loading` + `error` + retry.
 
 1. **M1 — Static contract.** Scaffold Vite app, `tokens.css` + `globals.css` from
    the mockup, full 3-column layout, all components wired to `src/data/mock/*.json`
-   (including `roundtable.json`). **Runs with no backend.** This is the demo-able
+   (including `meeting-room.json`). **Runs with no backend.** This is the demo-able
    skeleton.
 2. **M2 — Real scenarios.** Flip `api.ts` `MOCK` flag → `http://localhost:8000`.
    Scenario selector + time bins live from `/scenarios` and `/summary`.

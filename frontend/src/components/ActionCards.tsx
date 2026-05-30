@@ -6,9 +6,10 @@ export default function ActionCards() {
     briefing,
     preview,
     previewStatus,
+    actionStatus,
     previewAction,
+    decideAction,
     clearPreview,
-    showToast,
   } = useStore();
 
   if (!briefing || briefing.recommendations.length === 0) return null;
@@ -35,7 +36,7 @@ export default function ActionCards() {
             </p>
             {rec.risks.length > 0 && (
               <p className="text-dim" style={{ marginTop: 8 }}>
-                <strong>Risks (Auditor):</strong> {rec.risks.join(" ")}
+                <strong>Operational risks:</strong> {rec.risks.join(" ")}
               </p>
             )}
 
@@ -79,12 +80,16 @@ export default function ActionCards() {
                 className="btn"
                 onClick={() => {
                   clearPreview();
-                  showToast(`Rejected: ${rec.title}`);
+                  decideAction(rec.id, "reject");
                 }}
               >
                 Reject
               </button>
-              <button className="btn" onClick={() => showToast("Modify: operator edit (stub)")}>
+              <button
+                className="btn"
+                disabled={actionStatus.loading}
+                onClick={() => decideAction(rec.id, "modify", `Modify ${rec.title}`)}
+              >
                 Modify
               </button>
               <button
@@ -94,10 +99,22 @@ export default function ActionCards() {
               >
                 {previewStatus.loading ? "Simulating…" : showingPreview ? "Re-run" : "Preview"}
               </button>
+              <button
+                className="btn primary"
+                disabled={actionStatus.loading}
+                onClick={() => decideAction(rec.id, "accept")}
+              >
+                Accept
+              </button>
             </div>
             {previewStatus.error && (
               <p className="text-accent monospace" style={{ marginTop: 8 }}>
                 Preview failed: {previewStatus.error}
+              </p>
+            )}
+            {actionStatus.error && (
+              <p className="text-accent monospace" style={{ marginTop: 8 }}>
+                Action failed: {actionStatus.error}
               </p>
             )}
           </div>

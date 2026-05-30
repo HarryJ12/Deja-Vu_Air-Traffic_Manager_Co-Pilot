@@ -1,0 +1,83 @@
+{
+  "room": "meeting_room",
+  "messages": [
+    {
+      "role": "agent",
+      "agent": "Jarvis",
+      "content": "Meeting room opened. Sector HIGH_142 is projected to exceed capacity in 18 minutes.",
+      "severity": "watch",
+      "voice_id": "VtiJxTGG57AFTSQjMlja",
+      "source": "moderator"
+    },
+    {
+      "role": "agent",
+      "agent": "Air Marshal",
+      "content": "HIGH_142 hits 118% capacity in 18 minutes. 21 flights against a capacity of 18, three over.",
+      "severity": "alert",
+      "voice_id": "DcLiO3XaUWTu3gyon6hW",
+      "source": "agent_finding"
+    },
+    {
+      "role": "agent",
+      "agent": "Weather Boy",
+      "content": "A convective line is blocking the eastern corridor with echo tops at 44,000 ft and reflectivity up to 52 dBZ.",
+      "severity": "alert",
+      "voice_id": "FmJ4FDkdrYIKzBTruTkV",
+      "source": "agent_finding"
+    },
+    {
+      "role": "agent",
+      "agent": "Domino",
+      "content": "If unmitigated, arrival banks at ORD and EWR inherit roughly 247 minutes of delay, and HIGH_144 pressure rises next.",
+      "severity": "watch",
+      "voice_id": "tnVKC6NjwhdRxoQIfKue",
+      "source": "agent_finding"
+    },
+    {
+      "role": "agent",
+      "agent": "Historian",
+      "content": "8 similar scenarios on record. A western reroute worked 83% of the time in the mocked precedent file.",
+      "severity": "info",
+      "voice_id": "Ybqj6CIlqb6M85s9Bl4n",
+      "source": "agent_finding"
+    }
+  ],
+  "briefing": {
+    "mode": "quick",
+    "headline": "Sector HIGH_142 projected to exceed capacity in 18 minutes.",
+    "summary": "Convective weather is blocking the eastern corridor and pushing 22 flights into a single high-altitude sector.",
+    "primary_risk": {
+      "id": "risk_high142",
+      "sector_id": "HIGH_142",
+      "altitude_band": "HIGH",
+      "peak_time": "2025-08-21T18:33:00Z",
+      "risk_score": 88,
+      "utilization_pct": 118,
+      "affected_flight_count": 43,
+      "projected_delay_minutes": 247,
+      "causes": ["Convective weather blocks eastern corridor"]
+    },
+    "agents": [],
+    "recommendations": [
+      {
+        "id": "rec_west_reroute",
+        "title": "Meter or Reroute Westbound Flow",
+        "action_type": "reroute",
+        "summary": "Meter westbound flow before the HIGH_142 peak and route via the western corridor.",
+        "expected_impact": "Relieves HIGH_142 to ~96% capacity; ~21% delay reduction.",
+        "confidence_pct": 87,
+        "affected_flight_ids": ["UAL2367_KDEN", "AAL118_KLAX"],
+        "agent_contributors": ["Air Marshal", "Weather Boy", "Historian"],
+        "risks": ["Shifts capacity burden to adjacent sector HIGH_144."]
+      }
+    ],
+    "confidence": {
+      "overall_pct": 87,
+      "support": ["Air Marshal and Weather Boy agree on cause"],
+      "weaknesses": ["Delay estimate is a heuristic"],
+      "divergence_alarm": null
+    },
+    "generated_at": "2025-08-21T18:15:09Z"
+  },
+  "note": "Mock meeting room response."
+}

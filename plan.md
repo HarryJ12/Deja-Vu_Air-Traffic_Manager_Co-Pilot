@@ -338,27 +338,6 @@ Purpose:
 
 - Trust building
 
-### Risko
-
-Responsibilities:
-
-- Challenge recommendations
-- Identify uncertainty
-- Highlight weaknesses
-
-Outputs:
-
-- Risks
-- Assumptions
-- Forecast limitations
-- Confidence reductions
-
-Purpose:
-
-- Prevent overconfidence
-
-Risko exists to catch weak assumptions before the operator trusts a recommendation.
-
 ## Historical Intelligence And Time Warp
 
 These are two halves of the same system.
@@ -419,7 +398,7 @@ Purpose:
 
 Key differentiator.
 
-Historian identifies a similar scenario. Risko continuously compares current conditions against historical precedent.
+Historian identifies a similar scenario. Jarvis uses the briefing confidence block to explain when precedent is weak.
 
 Example:
 
@@ -617,7 +596,7 @@ This is intentionally simple and inspectable. Do not present it as FAA-grade pre
 5. Weather Boy explains weather contribution.
 6. Domino shows downstream consequences.
 7. Historian surfaces similar precedent.
-8. Risko identifies uncertainty.
+8. Jarvis identifies uncertainty from the confidence block.
 9. Recommendations appear as action cards.
 10. Operator previews an action.
 11. Time Warp updates the forecast.

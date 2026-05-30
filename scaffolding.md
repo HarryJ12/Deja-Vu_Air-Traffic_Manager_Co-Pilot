@@ -75,7 +75,7 @@ ASI_Hack/
         risk_scoring.py
         recommendations.py
         historian.py
-        risko.py
+        confidence.py
       services/
         scenario_service.py
         briefing_service.py
@@ -554,7 +554,7 @@ type RiskSummary = {
 };
 
 type AgentFinding = {
-  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Risko";
+  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian";
   severity: "info" | "watch" | "alert";
   title: string;
   detail: string;
@@ -682,7 +682,7 @@ type AgentRosterResponse = {
 };
 
 type AgentCard = {
-  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Risko";
+  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian";
   role: string;
   short_label: string;
   default_room: "jarvis" | "meeting_room";
@@ -716,7 +716,7 @@ type MapInspectionResponse = {
   weather: WeatherSample;
   nearby_flights: NearbyFlight[];
   matching_risks: RiskSummary[];
-  recommended_agents: Array<"Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Risko">;
+  recommended_agents: Array<"Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian">;
   narrative: string;
 };
 
@@ -898,7 +898,7 @@ type ChatResponse = {
 
 type ChatMessage = {
   role: "operator" | "agent";
-  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Risko" | null;
+  agent: "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | null;
   content: string;
   severity: "info" | "watch" | "alert";
   voice_id: string | null;
@@ -913,7 +913,7 @@ Multi-agent room for direct conversation with the specialist agents.
 Behavior:
 
 - Jarvis moderates.
-- Weather Boy, Air Marshal, Domino, Historian, and Risko can speak directly.
+- Weather Boy, Air Marshal, Domino, and Historian can speak directly.
 - Agent-specific ElevenLabs voices are enabled here only.
 - Frontend should visually separate this from the default tactical command channel.
 
@@ -922,7 +922,7 @@ Request:
 ```ts
 type MeetingRoomChatRequest = ChatRequest & {
   requested_agents?: Array<
-    "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian" | "Risko"
+    "Jarvis" | "Weather Boy" | "Air Marshal" | "Domino" | "Historian"
   >;
 };
 ```
@@ -935,7 +935,6 @@ ELEVENLABS_VOICE_WEATHER_BOY=
 ELEVENLABS_VOICE_AIR_MARSHAL=
 ELEVENLABS_VOICE_DOMINO=
 ELEVENLABS_VOICE_HISTORIAN=
-ELEVENLABS_VOICE_RISKO=
 ```
 
 Frontend behavior:
@@ -1041,7 +1040,7 @@ Every async action needs:
 
 ### `AgentPanel`
 
-- Displays findings from Weather Boy, Air Marshal, Domino, Historian, and Risko.
+- Displays findings from Weather Boy, Air Marshal, Domino, and Historian.
 - Use consistent agent rows, not decorative avatars.
 
 ### `RiskQueue`

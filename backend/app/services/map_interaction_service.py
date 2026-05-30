@@ -96,7 +96,7 @@ class MapInteractionService:
         if conflicts:
             agents.append("Weather Boy")
         if risks:
-            agents.extend(["Domino", "Risko"])
+            agents.append("Domino")
         return SectorDetailResponse(
             scenario_id=scenario_id,
             time_bin=context["time_bin"],
@@ -267,7 +267,6 @@ class MapInteractionService:
             agents.append("Weather Boy")
         if has_nearby_flights:
             agents.append("Domino")
-        agents.append("Risko")
         return agents
 
     def _point_narrative(

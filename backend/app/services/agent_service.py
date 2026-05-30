@@ -66,17 +66,6 @@ class AgentService:
                 default_position={"x": 0.72, "y": 0.66},
                 responsibilities=["similar scenarios", "mock historical outcomes", "supporting evidence"],
             ),
-            AgentCard(
-                agent="Risko",
-                role="Assumption check",
-                short_label="R",
-                default_room="meeting_room",
-                can_speak_in_default=False,
-                meeting_room_only=True,
-                voice_id=self.voices.voice_id_for_agent("Risko"),
-                default_position={"x": 0.72, "y": 0.8},
-                responsibilities=["uncertainty", "missing data", "confidence reductions"],
-            ),
         ]
         return AgentRosterResponse(
             agents=agents,

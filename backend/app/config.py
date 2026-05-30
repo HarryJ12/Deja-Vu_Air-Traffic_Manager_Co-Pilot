@@ -85,7 +85,6 @@ def get_settings() -> Settings:
             "Air Marshal": os.getenv("ELEVENLABS_VOICE_AIR_MARSHAL", "DcLiO3XaUWTu3gyon6hW"),
             "Domino": os.getenv("ELEVENLABS_VOICE_DOMINO", "tnVKC6NjwhdRxoQIfKue"),
             "Historian": os.getenv("ELEVENLABS_VOICE_HISTORIAN", "Ybqj6CIlqb6M85s9Bl4n"),
-            "Risko": os.getenv("ELEVENLABS_VOICE_RISKO", "IRHApOXLvnW57QJPQH2P"),
         },
         use_mock_transcription=_env_bool("USE_MOCK_TRANSCRIPTION", True),
         use_mock_llm=_env_bool("USE_MOCK_LLM", True),
