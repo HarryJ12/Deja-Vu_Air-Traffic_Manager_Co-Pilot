@@ -1,4 +1,4 @@
-# DĒJÅ VŪ Intelligence - Airspace Comprehension Layer
+# DĒJÅ VŪ -  Air Traffic Manager Co-Pilot 
 
 <div align="center">
 
@@ -16,16 +16,16 @@
 
 ## Overview
 
-Traffic managers already have flight plans, weather forecasts, sector boundaries, and capacity numbers.
+Air traffic managers have access to vast amounts of operational and historical data, but in time-sensitive situations, they often lack the ability to rapidly synthesize that information into actionable decisions. 
 
-The hard part is not seeing the data. The hard part is understanding what matters before the delay wave spreads.
+The challenge is not data availability, but turning data into timely, high-confidence recommendations.
 
 **DĒJÅ VŪ Intelligence** turns the Hackathon Data Bundle into:
 
 - a live tactical radar view
 - projected sector risk
 - weather-aware route conflict detection
-- historical precedent retrieval
+- **historical precedent retrieval**
 - fast multi-agent reasoning
 - voice-first operational briefings
 
@@ -94,8 +94,6 @@ The product is not an autopilot. It is a copilot that helps a human operator und
 - Hackathon Data Bundle available locally
 - API keys for live AI and voice behavior
 
-The app can run without API keys, but missing providers fall back to mock mode.
-
 ### Installation
 
 1. **Clone the repository**
@@ -120,9 +118,6 @@ OPENAI_API_KEY=your_openai_key
 ANTHROPIC_API_KEY=your_anthropic_key
 GROK_API_KEY=your_grok_key
 ELEVENLABS_API_KEY=your_elevenlabs_key
-USE_MOCK_TRANSCRIPTION=false
-USE_MOCK_LLM=false
-USE_MOCK_VOICE=false
 ```
 
 3. **Install backend dependencies**
@@ -303,7 +298,6 @@ npm run build
 
 ## Deployment Notes
 
-- Frontend is Vercel-ready through the Vite build output.
 - Backend is a FastAPI app and should be deployed separately.
 - Set production environment variables in the deployment provider.
 - Do not commit `.env` files or the raw Hackathon Data Bundle.
@@ -318,6 +312,6 @@ Copyright © 2026 DĒJÅ VŪ Intelligence. All rights reserved.
 
 <div align="center">
 
-**Built for the ASI Hackathon 2026**
+**Built at Hacking the Fourth Dimension with ASI 2026**
 
 </div>
