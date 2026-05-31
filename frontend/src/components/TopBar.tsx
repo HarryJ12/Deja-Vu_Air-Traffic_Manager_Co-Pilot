@@ -4,7 +4,7 @@ import VoiceButton from "./VoiceButton";
 import MeetingRoomButton from "./MeetingRoomButton";
 
 export default function TopBar() {
-  const { scenarios, scenarioId, selectScenario, alarmSound, toggleAlarmSound } = useStore();
+  const { scenarios, scenarioId, selectScenario } = useStore();
 
   return (
     <header className="header">
@@ -29,14 +29,6 @@ export default function TopBar() {
       <TimeWarpSlider />
 
       <div className="header-right">
-        <button
-          className={`layer-chip ${alarmSound ? "on" : ""}`}
-          onClick={toggleAlarmSound}
-          aria-pressed={alarmSound}
-          title="Toggle alarm sound"
-        >
-          {alarmSound ? "Alarm ◼" : "Alarm ◻"}
-        </button>
         <MeetingRoomButton />
         <VoiceButton />
       </div>

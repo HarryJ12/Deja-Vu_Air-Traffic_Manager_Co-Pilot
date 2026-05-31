@@ -1,7 +1,7 @@
 {
   "mode": "quick",
   "headline": "Sector HIGH_142 projected to exceed capacity in 18 minutes.",
-  "summary": "Convective weather is blocking the eastern corridor and pushing 22 flights into a single high-altitude sector. Utilization peaks at 118% of capacity. A westbound meter or reroute relieves the breach but shifts load toward HIGH_144.",
+  "summary": "Jarvis is synthesizing a predicted operational risk from all specialist reads: Air Marshal sees capacity pressure, Weather Boy sees severe storm intersections, Domino estimates downstream delay, Historian supplies similar bundled precedents, and Risko checks confidence drift. A westbound meter or reroute is simulation-only and still operator-approved.",
   "primary_risk": {
     "id": "risk_high142",
     "sector_id": "HIGH_142",
@@ -21,33 +21,37 @@
     {
       "agent": "Air Marshal",
       "severity": "alert",
-      "title": "Sector HIGH_142",
-      "detail": "Peak overload projected in 18 minutes. 22 contributing flights.",
-      "evidence": ["count 21 vs capacity 18", "overload 3 flights", "peak 18:33Z"],
+      "title": "HIGH_142 capacity pressure",
+      "detail": "21/18 aircraft assigned to HIGH_142; overload is 3 flights near 18:33Z.",
+      "evidence": ["22 contributing flight ids drive the count", "point-in-polygon sector assignment"],
       "metric": "118% CAP"
     },
     {
       "agent": "Weather Boy",
       "severity": "alert",
-      "title": "Echo Top",
-      "detail": "Convective weather blocking eastern corridor. Propagation exceeds historical pattern by 38%.",
-      "evidence": ["refc 52 dBZ peak", "echo top 44,000 ft", "blocks 3 filed routes"],
+      "title": "22 weather-route conflicts",
+      "detail": "Convective weather blocking eastern corridor with echo tops reaching cruise altitude.",
+      "evidence": ["max refc 52 dBZ; max echo top 44,000 ft", "blocks 3 filed routes"],
       "metric": "42,000 FT"
     },
     {
       "agent": "Domino",
       "severity": "watch",
-      "title": "Network Impact",
-      "detail": "Arrival banks at ORD and EWR will inherit delay if unmitigated.",
-      "evidence": ["+247 projected delay min", "downstream HIGH_144 pressure rising"],
+      "title": "Network impact chain",
+      "detail": "43 affected flights create a 247-minute delay proxy if the peak is left alone.",
+      "evidence": ["downstream HIGH_144 pressure rising", "arrival banks at ORD and EWR inherit delay"],
       "metric": "+247 MIN"
     },
     {
       "agent": "Historian",
-      "severity": "info",
-      "title": "Similar Scenarios",
-      "detail": "Western reroute observed success rate 83% across matched precedents.",
-      "evidence": ["8 matches", "avg delay reduction 18%", "closest match 2025-08-13"],
+      "severity": "watch",
+      "title": "8 precedent windows matched",
+      "detail": "Mock historical retrieval found a close HIGH_142 pattern. Western reroute observed success rate 83% across matched precedents.",
+      "evidence": [
+        "2025-08-13 18:15Z: 91% similar, rerouted a narrow set of weather-conflicted flights.",
+        "2025-09-04 21:00Z: 84% similar, metered inbound flow before peak demand.",
+        "2026-03-19 15:30Z: 78% similar, held marginal departures until the sector recovered."
+      ],
       "metric": "8 MATCHES"
     }
   ],
@@ -67,16 +71,16 @@
   "confidence": {
     "overall_pct": 87,
     "support": [
-      "Air Marshal and Weather Boy agree on cause",
-      "8 historical precedents favor western reroute (83% success)"
+      "Risko support: Air Marshal and Weather Boy agree on cause",
+      "Risko support: 8 historical precedents favor western reroute in the mock record"
     ],
     "weaknesses": [
-      "Storm propagation exceeds precedent by 38%",
-      "Delay estimate is an inspectable heuristic, not a certified prediction"
+      "Risko caveat: storm propagation exceeds precedent by 38%",
+      "Risko caveat: delay estimate is an inspectable heuristic, not a certified prediction"
     ],
     "divergence_alarm": {
       "is_active": true,
-      "reason": "Storm propagation exceeds historical match by 38%. Historical recommendation confidence reduced from 91% to 87%.",
+      "reason": "Risko flags storm propagation exceeding historical match by 38%. Historical recommendation confidence is reduced from 91% to 87%.",
       "confidence_delta_pct": -4
     }
   },

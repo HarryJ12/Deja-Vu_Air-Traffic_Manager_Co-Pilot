@@ -124,7 +124,7 @@ frontend/
       globals.css       # reset + base typography from mockup.html
     lib/
       types.ts          # mirror ALL API types from scaffolding.md (single source on FE)
-      api.ts            # fetch wrapper; MOCK flag switches local JSON vs localhost:8000
+      api.ts            # fetch wrapper; live backend by default, VITE_USE_MOCK for local JSON
       format.ts         # number/percent/delay formatting
       time.ts           # time-bin helpers, "+N MIN" labels
       projection.ts     # lat/lon -> canvas x/y (uses WEATHER_GRID bounds)
@@ -270,10 +270,9 @@ meeting room), each with `loading` + `error` + retry.
 ## 9. Build order (mock-first milestones)
 
 1. **M1 — Static contract.** Scaffold Vite app, `tokens.css` + `globals.css` from
-   the mockup, full 3-column layout, all components wired to `src/data/mock/*.json`
-   (including `meeting-room.json`). **Runs with no backend.** This is the demo-able
-   skeleton.
-2. **M2 — Real scenarios.** Flip `api.ts` `MOCK` flag → `http://localhost:8000`.
+   the mockup, full 3-column layout, all components wired to the backend contract
+   with `src/data/mock/*.json` available behind `VITE_USE_MOCK=1`.
+2. **M2 — Real scenarios.** Keep the default live backend path through `/api`.
    Scenario selector + time bins live from `/scenarios` and `/summary`.
 3. **M3 — Real risk.** Map + Risk Queue reflect real `/state` as the timeline moves.
 4. **M4 — Briefing + preview + meeting room.** Situation Brief, Action Preview

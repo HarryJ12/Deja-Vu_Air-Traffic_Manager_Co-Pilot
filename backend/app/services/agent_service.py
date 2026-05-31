@@ -56,6 +56,17 @@ class AgentService:
                 responsibilities=["delay proxy", "downstream pressure", "arrival bank impact"],
             ),
             AgentCard(
+                agent="Risko",
+                role="Confidence guardrail",
+                short_label="RK",
+                default_room="meeting_room",
+                can_speak_in_default=False,
+                meeting_room_only=True,
+                voice_id=self.voices.voice_id_for_agent("Risko"),
+                default_position={"x": 0.72, "y": 0.66},
+                responsibilities=["confidence drift", "data caveats", "divergence warnings"],
+            ),
+            AgentCard(
                 agent="Historian",
                 role="Precedent memory",
                 short_label="H",
@@ -63,7 +74,7 @@ class AgentService:
                 can_speak_in_default=False,
                 meeting_room_only=True,
                 voice_id=self.voices.voice_id_for_agent("Historian"),
-                default_position={"x": 0.72, "y": 0.66},
+                default_position={"x": 0.72, "y": 0.8},
                 responsibilities=["similar scenarios", "mock historical outcomes", "supporting evidence"],
             ),
         ]

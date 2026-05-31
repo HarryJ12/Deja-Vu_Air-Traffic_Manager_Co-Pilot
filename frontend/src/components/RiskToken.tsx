@@ -1,20 +1,33 @@
 import { useState } from "react";
-import { useStore } from "../state/store";
+import { filterRisksForControls, useStore } from "../state/store";
 import { useDrag, type Pos } from "./useDrag";
 import { pct, minutes, clockZ, utilSeverity } from "../lib/format";
 
-// Risk Queue as a compact draggable token. Collapsed = count + top risk.
+// Problem List as a compact draggable token. Collapsed = count + top problem.
 export default function RiskToken({ initial, z }: { initial: Pos; z: React.MutableRefObject<number> }) {
-  const { state, selectedRiskId, selectRisk, loadSectorDetail } = useStore();
+  const { state, timeWarpControls, selectedRiskId, selectRisk, loadSectorDetail } = useStore();
   const { containerRef, style, handleProps } = useDrag(initial, z);
   const [open, setOpen] = useState(false);
-  const risks = state?.risks ?? [];
+  const risks = filterRisksForControls(state?.risks ?? [], timeWarpControls);
   const top = risks[0];
+  const planeFilter =
+    timeWarpControls.altitudeLens === "ALL"
+      ? "all planes"
+      : timeWarpControls.altitudeLens === "HIGH"
+        ? "above 35k ft"
+        : "below 35k ft";
+  const predictionSource =
+    "Predicted from airspace crowding, storm intersections, downstream delay pressure, similar past cases, and confidence checks.";
 
   return (
     <div ref={containerRef} className={`panel-token ${open ? "open" : ""}`} style={{ ...style, width: 240 }}>
       <div className="token-handle" {...handleProps}>
-        <span className="th-title">Risk Queue · {risks.length}</span>
+        <span className="th-title">
+          Problem List · {risks.length}
+          <span className="token-filter-note">
+            {planeFilter} · {timeWarpControls.capacityThresholdPct}%+ full
+          </span>
+        </span>
         <button
           className="th-btn"
           onPointerDown={(e) => e.stopPropagation()}
@@ -26,15 +39,24 @@ export default function RiskToken({ initial, z }: { initial: Pos; z: React.Mutab
       </div>
 
       <div className="panel-token-body">
-        {risks.length === 0 && <p className="text-dim">No active risks.</p>}
+        <p className="text-dim risk-source-note">{predictionSource}</p>
+
+        {risks.length === 0 && (
+          <p className="text-dim">No predicted problems above the active fullness and altitude filters.</p>
+        )}
 
         {!open && top && (
-          <div className="risk-line">
-            <span>
-              <span className={`status-dot ${utilSeverity(top.utilization_pct)}`} /> {top.sector_id}
-            </span>
-            <span className="monospace text-accent">{pct(top.utilization_pct)}</span>
-          </div>
+          <>
+            <div className="risk-line">
+              <span>
+                <span className={`status-dot ${utilSeverity(top.utilization_pct)}`} /> {top.sector_id}
+              </span>
+              <span className="monospace text-accent">{pct(top.utilization_pct)}</span>
+            </div>
+            <p className="text-dim risk-source-note">
+              Top prediction combines {top.affected_flight_count} planes, {minutes(top.projected_delay_minutes)} delay, storm conflicts, and similar past cases.
+            </p>
+          </>
         )}
 
         {open &&
@@ -67,11 +89,14 @@ export default function RiskToken({ initial, z }: { initial: Pos; z: React.Mutab
                   </span>
                 </div>
                 <div className="info-block-row monospace text-dim" style={{ marginBottom: 0 }}>
-                  <span>peak {clockZ(r.peak_time)}</span>
+                  <span>at {clockZ(r.peak_time)}</span>
                   <span>
-                    {r.affected_flight_count} fl · {minutes(r.projected_delay_minutes)}
+                    {r.affected_flight_count} planes · {minutes(r.projected_delay_minutes)}
                   </span>
                 </div>
+                <p className="text-dim risk-source-note">
+                  Prediction signal: {pct(r.utilization_pct)} full, storm pressure when present, downstream delay estimate, and similar past cases.
+                </p>
               </div>
             );
           })}

@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useStore } from "../state/store";
 import { agentFace, agentRole } from "./agentFaces";
 import type { AgentName, ChatMessage } from "../lib/types";
+import VoiceButton from "./VoiceButton";
 
 const SUGGESTIONS = [
   "What's the risk on HIGH_142 and what should I do?",
@@ -14,9 +15,18 @@ const SUGGESTIONS = [
 const SEATS: { agent: Exclude<AgentName, "Jarvis">; pos: React.CSSProperties }[] = [
   { agent: "Air Marshal", pos: { left: "3%", top: "26%" } },
   { agent: "Weather Boy", pos: { right: "3%", top: "26%" } },
-  { agent: "Domino", pos: { left: "3%", top: "62%" } },
-  { agent: "Historian", pos: { right: "3%", top: "62%" } },
+  { agent: "Domino", pos: { left: "3%", top: "58%" } },
+  { agent: "Risko", pos: { left: "50%", bottom: "4%", transform: "translateX(-50%)" } },
+  { agent: "Historian", pos: { right: "3%", top: "58%" } },
 ];
+
+const SEAT_CLASS: Record<Exclude<AgentName, "Jarvis">, string> = {
+  "Air Marshal": "air-marshal",
+  "Weather Boy": "weather",
+  Domino: "domino",
+  Risko: "risko",
+  Historian: "historian",
+};
 
 export default function MeetingRoom() {
   const {
@@ -40,14 +50,18 @@ export default function MeetingRoom() {
 
   if (!meetingRoom.open) return null;
 
-  const { question, loading, error, responses } = meetingRoom;
-  const submit = () => question.trim() && askMeetingRoom(question);
+  const { question, loading, error, responses, history } = meetingRoom;
+  const submit = () => question.trim() && askMeetingRoom(question, true);
 
+  const conversation = history.length > 0 ? history : responses?.messages ?? [];
   const byAgent = new Map<string, ChatMessage>();
-  responses?.messages
+  conversation
     .filter((m) => m.role === "agent" && m.agent && m.agent !== "Jarvis")
     .forEach((m) => byAgent.set(m.agent!, m));
-  const jarvisMessage = responses?.messages.find((m) => m.agent === "Jarvis");
+  let jarvisMessage: ChatMessage | undefined;
+  conversation.forEach((m) => {
+    if (m.agent === "Jarvis") jarvisMessage = m;
+  });
 
   const synthRecId = responses?.briefing.recommendations[0]?.id ?? null;
   const recExists = !!briefing?.recommendations.find((r) => r.id === synthRecId);
@@ -76,6 +90,21 @@ export default function MeetingRoom() {
           {/* The table */}
           <div className="room-table">
             <span className="room-table-label monospace">DĒJÅ VŪ // ROUNDTABLE</span>
+          </div>
+
+          <div className="room-transcript" aria-live="polite">
+            {conversation.length === 0 && (
+              <p className="room-transcript-empty">The room transcript appears here.</p>
+            )}
+            {conversation.map((message, index) => (
+              <div
+                key={`${message.agent ?? "operator"}-${message.source ?? "turn"}-${index}`}
+                className={`room-transcript-line ${message.role}`}
+              >
+                <span>{message.agent ?? "You"}</span>
+                <p>{message.content}</p>
+              </div>
+            ))}
           </div>
 
           {/* Jarvis at the head */}
@@ -112,9 +141,19 @@ export default function MeetingRoom() {
           {/* Specialists around the table */}
           {SEATS.map(({ agent, pos }) => {
             const r = byAgent.get(agent);
+            const isHistorian = agent === "Historian";
             const alert = r?.severity === "alert";
             return (
-              <div key={agent} className={`seat ${alert ? "alert" : ""}`} style={pos}>
+              <div
+                key={agent}
+                className={[
+                  "seat",
+                  `seat--${SEAT_CLASS[agent]}`,
+                  isHistorian ? "seat--featured" : "seat--neutral",
+                  alert ? "alert" : "",
+                ].join(" ")}
+                style={pos}
+              >
                 <span className="seat-face">{agentFace(agent)}</span>
                 <div className="seat-meta">
                   <div className="seat-name">{agent}</div>
@@ -128,6 +167,19 @@ export default function MeetingRoom() {
 
         {error && <div className="state-msg error room-error">Meeting room failed: {error}</div>}
 
+        {history.length > 0 && (
+          <div className="room-thread" aria-label="Meeting room conversation">
+            {history.map((message, index) => (
+              <p
+                key={`${message.agent ?? "operator"}-${message.source ?? "message"}-${index}`}
+                className={message.agent === "Historian" ? "historian" : ""}
+              >
+                <b>{message.agent ?? "You"}:</b> {message.content}
+              </p>
+            ))}
+          </div>
+        )}
+
         {!responses && !loading && (
           <div className="room-suggestions">
             {SUGGESTIONS.map((s) => (
@@ -136,7 +188,7 @@ export default function MeetingRoom() {
                 className="suggestion-chip"
                 onClick={() => {
                   setMeetingQuestion(s);
-                  askMeetingRoom(s);
+                  askMeetingRoom(s, true);
                 }}
               >
                 {s}
@@ -150,12 +202,13 @@ export default function MeetingRoom() {
             ref={inputRef}
             className="room-input"
             value={question}
-            placeholder="Speak to the room…"
+            placeholder="Hold M to cut in, or type a question..."
             onChange={(e) => setMeetingQuestion(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}
           />
-          <button className="ptt-button" onClick={submit} disabled={loading || !question.trim()}>
-            {loading ? "Asking…" : "Ask all"}
+          <VoiceButton mode="meeting_room" className="room-voice" />
+          <button className="ptt-button" onClick={submit} disabled={!question.trim()}>
+            {loading ? "Interrupt" : "Ask all"}
           </button>
         </div>
       </div>

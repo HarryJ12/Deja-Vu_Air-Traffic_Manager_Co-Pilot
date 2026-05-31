@@ -14,8 +14,9 @@ def briefing(
     scenario_id: str,
     time_bin_id: str = Query(...),
     mode: str = Query("quick"),
+    ai_summary: bool = Query(False),
 ) -> BriefingResponse:
     try:
-        return service.briefing(scenario_id, time_bin_id, mode)
+        return service.briefing(scenario_id, time_bin_id, mode, ai_summary=ai_summary)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

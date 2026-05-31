@@ -44,6 +44,8 @@ def create_app() -> FastAPI:
             "transcription_mode": "live" if settings.has_openai_transcription else "mock",
             "transcription_model": settings.openai_transcription_model,
             "claude_mode": "live" if settings.has_anthropic else "mock",
+            "openai_chat_mode": "live" if settings.has_openai_chat else "mock",
+            "grok_mode": "live" if settings.has_xai else "mock",
             "voice_mode": "live" if settings.has_elevenlabs else "mock",
         }
 

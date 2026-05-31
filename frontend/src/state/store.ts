@@ -6,6 +6,7 @@ import type {
   ScenarioStateResponse,
   BriefingResponse,
   BriefingMode,
+  AltitudeBand,
   ActionPreviewResponse,
   ActionDecisionResponse,
   ChatResponse,
@@ -13,6 +14,7 @@ import type {
   FlightDetailResponse,
   SectorDetailResponse,
   AgentRosterResponse,
+  AgentName,
 } from "../lib/types";
 
 type Async = { loading: boolean; error: string | null };
@@ -24,15 +26,68 @@ type Layers = {
   labels: boolean;
 };
 
+export type AltitudeLens = "ALL" | AltitudeBand;
+
+export type TimeWarpControls = {
+  horizonMinutes: number;
+  capacityThresholdPct: number;
+  altitudeLens: AltitudeLens;
+  weatherDbzThreshold: number;
+  interventionIntensityPct: number;
+  subBinMotion: boolean;
+  subBinOffsetMinutes: number;
+};
+
+export const DEFAULT_TIME_WARP_CONTROLS: TimeWarpControls = {
+  horizonMinutes: 18 * 60,
+  capacityThresholdPct: 90,
+  altitudeLens: "ALL",
+  weatherDbzThreshold: 40,
+  interventionIntensityPct: 50,
+  subBinMotion: false,
+  subBinOffsetMinutes: 0,
+};
+
+export function altitudeMatchesLens(altitudeFt: number, lens: AltitudeLens) {
+  if (lens === "ALL") return true;
+  return lens === "HIGH" ? altitudeFt >= 35000 : altitudeFt < 35000;
+}
+
+export function filterRisksForControls<T extends { altitude_band: AltitudeBand; utilization_pct: number }>(
+  risks: T[],
+  controls: TimeWarpControls
+) {
+  return risks
+    .filter((risk) => {
+      const altitudeOk = controls.altitudeLens === "ALL" || risk.altitude_band === controls.altitudeLens;
+      return altitudeOk && risk.utilization_pct >= controls.capacityThresholdPct;
+    })
+    .sort((a, b) => b.utilization_pct - a.utilization_pct);
+}
+
 type MeetingRoom = {
   open: boolean;
   question: string;
   loading: boolean;
   error: string | null;
   responses: ChatResponse | null;
+  history: ChatResponse["messages"];
+};
+
+type AgentChat = {
+  open: boolean;
+  agent: AgentName | null;
+  question: string;
+  loading: boolean;
+  error: string | null;
+  responses: ChatResponse | null;
+  history: ChatResponse["messages"];
 };
 
 type Toast = { id: number; message: string } | null;
+
+let meetingRoomRequestId = 0;
+let agentChatRequestId = 0;
 
 type AppState = {
   // selection
@@ -43,6 +98,7 @@ type AppState = {
   selectedFlightId: string | null;
   selectedTowerId: string | null;
   layers: Layers;
+  timeWarpControls: TimeWarpControls;
   briefingMode: BriefingMode;
   alarmSound: boolean;
 
@@ -50,6 +106,7 @@ type AppState = {
   scenarios: Scenario[];
   summary: ScenarioSummaryResponse | null;
   state: ScenarioStateResponse | null;
+  nextState: ScenarioStateResponse | null;
   briefing: BriefingResponse | null;
   preview: ActionPreviewResponse | null;
   actionDecision: ActionDecisionResponse | null;
@@ -68,6 +125,7 @@ type AppState = {
   inspectionStatus: Async;
 
   meetingRoom: MeetingRoom;
+  agentChat: AgentChat;
   toast: Toast;
 
   // actions
@@ -79,6 +137,10 @@ type AppState = {
   selectFlight: (id: string | null) => void;
   selectTower: (id: string | null) => void;
   toggleLayer: (key: keyof Layers) => void;
+  setTimeWarpControl: <K extends keyof TimeWarpControls>(
+    key: K,
+    value: TimeWarpControls[K]
+  ) => void;
   toggleAlarmSound: () => void;
   setBriefingMode: (mode: BriefingMode) => void;
   previewAction: (recommendationId: string) => Promise<void>;
@@ -97,7 +159,13 @@ type AppState = {
   openMeetingRoom: (prefill?: string) => void;
   closeMeetingRoom: () => void;
   setMeetingQuestion: (q: string) => void;
-  askMeetingRoom: (question: string) => Promise<void>;
+  askMeetingRoom: (question: string, forceLive?: boolean) => Promise<ChatResponse | null>;
+  setMeetingRoomResponses: (responses: ChatResponse, question?: string) => void;
+  openAgentChat: (agent: AgentName, prefill?: string) => void;
+  closeAgentChat: () => void;
+  setAgentQuestion: (q: string) => void;
+  askAgentChat: (question: string) => Promise<ChatResponse | null>;
+  setAgentChatResponses: (responses: ChatResponse, question?: string) => void;
 };
 
 const idle: Async = { loading: false, error: null };
@@ -110,12 +178,14 @@ export const useStore = create<AppState>((set, get) => ({
   selectedFlightId: null,
   selectedTowerId: null,
   layers: { flights: true, weather: true, towers: true, labels: true },
+  timeWarpControls: DEFAULT_TIME_WARP_CONTROLS,
   briefingMode: "quick",
   alarmSound: false,
 
   scenarios: [],
   summary: null,
   state: null,
+  nextState: null,
   briefing: null,
   preview: null,
   actionDecision: null,
@@ -132,7 +202,16 @@ export const useStore = create<AppState>((set, get) => ({
   actionStatus: { ...idle },
   inspectionStatus: { ...idle },
 
-  meetingRoom: { open: false, question: "", loading: false, error: null, responses: null },
+  meetingRoom: { open: false, question: "", loading: false, error: null, responses: null, history: [] },
+  agentChat: {
+    open: false,
+    agent: null,
+    question: "",
+    loading: false,
+    error: null,
+    responses: null,
+    history: [],
+  },
   toast: null,
 
   init: async () => {
@@ -156,6 +235,7 @@ export const useStore = create<AppState>((set, get) => ({
       mapInspection: null,
       flightDetail: null,
       sectorDetail: null,
+      nextState: null,
       preview: null,
       actionDecision: null,
       summaryStatus: { loading: true, error: null },
@@ -170,20 +250,28 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   setTimeBin: async (id) => {
-    const { scenarioId } = get();
+    const { scenarioId, summary } = get();
     if (!scenarioId) return;
+    const index = summary?.time_bins.findIndex((bin) => bin.id === id) ?? -1;
+    const nextBin = index >= 0 ? summary?.time_bins[index + 1] : null;
     set({
       timeBinId: id,
+      nextState: null,
       stateStatus: { loading: true, error: null },
       briefingStatus: { loading: true, error: null },
     });
     try {
-      const [state, briefing] = await Promise.all([
+      const nextStatePromise = nextBin
+        ? api.getState(scenarioId, nextBin.id).catch(() => null)
+        : Promise.resolve(null);
+      const [state, briefing, nextState] = await Promise.all([
         api.getState(scenarioId, id),
         api.getBriefing(scenarioId, id),
+        nextStatePromise,
       ]);
       set({
         state,
+        nextState,
         briefing,
         mapInspection: null,
         flightDetail: null,
@@ -215,6 +303,13 @@ export const useStore = create<AppState>((set, get) => ({
 
   toggleLayer: (key) =>
     set((s) => ({ layers: { ...s.layers, [key]: !s.layers[key] } })),
+  setTimeWarpControl: (key, value) =>
+    set((s) => ({
+      timeWarpControls: {
+        ...s.timeWarpControls,
+        [key]: value,
+      },
+    })),
   toggleAlarmSound: () => set((s) => ({ alarmSound: !s.alarmSound })),
 
   setBriefingMode: (mode) => set({ briefingMode: mode }),
@@ -307,25 +402,133 @@ export const useStore = create<AppState>((set, get) => ({
       meetingRoom: { ...s.meetingRoom, open: true, question: prefill ?? s.meetingRoom.question },
     })),
   closeMeetingRoom: () =>
-    set((s) => ({ meetingRoom: { ...s.meetingRoom, open: false } })),
+    set((s) => {
+      meetingRoomRequestId += 1;
+      return { meetingRoom: { ...s.meetingRoom, open: false, loading: false } };
+    }),
   setMeetingQuestion: (q) =>
     set((s) => ({ meetingRoom: { ...s.meetingRoom, question: q } })),
 
-  askMeetingRoom: async (question) => {
+  askMeetingRoom: async (question, forceLive = false) => {
     const { scenarioId, timeBinId } = get();
-    if (!scenarioId || !timeBinId || !question.trim()) return;
+    if (!scenarioId || !timeBinId || !question.trim()) return null;
+    const requestId = ++meetingRoomRequestId;
     set((s) => ({
       meetingRoom: { ...s.meetingRoom, loading: true, error: null, responses: null, question },
     }));
     try {
-      const responses = await api.meetingRoomChat({
-        scenario_id: scenarioId,
-        time_bin_id: timeBinId,
-        message: question,
-      });
-      set((s) => ({ meetingRoom: { ...s.meetingRoom, loading: false, responses } }));
+      const responses = await api.meetingRoomChat(
+        {
+          scenario_id: scenarioId,
+          time_bin_id: timeBinId,
+          message: question,
+          history: get().meetingRoom.history.slice(-12),
+        },
+        forceLive
+      );
+      if (requestId !== meetingRoomRequestId || !get().meetingRoom.open) return null;
+      set((s) => ({
+        meetingRoom: {
+          ...s.meetingRoom,
+          loading: false,
+          responses,
+          history: [...s.meetingRoom.history, ...responses.messages],
+        },
+      }));
+      return responses;
     } catch (e) {
-      set((s) => ({ meetingRoom: { ...s.meetingRoom, loading: false, error: String(e) } }));
+      if (requestId === meetingRoomRequestId) {
+        set((s) => ({ meetingRoom: { ...s.meetingRoom, loading: false, error: String(e) } }));
+      }
+      return null;
     }
   },
+
+  setMeetingRoomResponses: (responses, question) =>
+    set((s) => ({
+      meetingRoom: {
+        ...s.meetingRoom,
+        open: true,
+        loading: false,
+        error: null,
+        question: question ?? s.meetingRoom.question,
+        responses,
+        history: [...s.meetingRoom.history, ...responses.messages],
+      },
+    })),
+
+  openAgentChat: (agent, prefill) =>
+    set((s) => ({
+      agentChat: {
+        ...s.agentChat,
+        open: true,
+        agent,
+        question: prefill ?? (s.agentChat.agent === agent ? s.agentChat.question : ""),
+        responses: s.agentChat.agent === agent ? s.agentChat.responses : null,
+        history: s.agentChat.agent === agent ? s.agentChat.history : [],
+        error: null,
+      },
+    })),
+  closeAgentChat: () =>
+    set((s) => {
+      agentChatRequestId += 1;
+      return {
+        agentChat: { ...s.agentChat, open: false, agent: null, loading: false },
+      };
+    }),
+  setAgentQuestion: (q) =>
+    set((s) => ({ agentChat: { ...s.agentChat, question: q } })),
+  askAgentChat: async (question) => {
+    const { scenarioId, timeBinId, agentChat } = get();
+    if (!scenarioId || !timeBinId || !agentChat.agent || !question.trim()) return null;
+    const requestId = ++agentChatRequestId;
+    set((s) => ({
+      agentChat: { ...s.agentChat, loading: true, error: null, responses: null, question },
+    }));
+    try {
+      const responses = await api.meetingRoomChat(
+        {
+          scenario_id: scenarioId,
+          time_bin_id: timeBinId,
+          message: question,
+          requested_agents: [agentChat.agent],
+          history: agentChat.history.slice(-8),
+        },
+        true
+      );
+      if (
+        requestId !== agentChatRequestId ||
+        !get().agentChat.open ||
+        get().agentChat.agent !== agentChat.agent
+      ) {
+        return null;
+      }
+      set((s) => ({
+        agentChat: {
+          ...s.agentChat,
+          loading: false,
+          responses,
+          history: [...s.agentChat.history, ...responses.messages],
+        },
+      }));
+      return responses;
+    } catch (e) {
+      if (requestId === agentChatRequestId) {
+        set((s) => ({ agentChat: { ...s.agentChat, loading: false, error: String(e) } }));
+      }
+      return null;
+    }
+  },
+  setAgentChatResponses: (responses, question) =>
+    set((s) => ({
+      agentChat: {
+        ...s.agentChat,
+        open: true,
+        loading: false,
+        error: null,
+        question: question ?? s.agentChat.question,
+        responses,
+        history: [...s.agentChat.history, ...responses.messages],
+      },
+    })),
 }));

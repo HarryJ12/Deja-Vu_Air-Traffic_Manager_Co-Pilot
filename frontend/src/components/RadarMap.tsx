@@ -1,8 +1,14 @@
-import { useEffect, useRef } from "react";
-import { useStore } from "../state/store";
+import { useEffect, useMemo, useRef } from "react";
+import { altitudeMatchesLens, filterRisksForControls, useStore } from "../state/store";
 import { VIEW } from "../lib/projection";
 import { AIRPORTS, airportName, airportCity, flightDisplayName } from "../lib/airports";
-import type { FlightDetailResponse, FlightPosition, MapInspectionResponse } from "../lib/types";
+import type {
+  FlightDetailResponse,
+  FlightPosition,
+  MapInspectionResponse,
+  SectorFeature,
+} from "../lib/types";
+import DraggablePanel from "./DraggablePanel";
 import LayerControls from "./LayerControls";
 
 const GREEN = "#2fe06a";
@@ -10,6 +16,113 @@ const GREEN_DIM = "#155e33";
 const GREEN_RING = "#1f7d44";
 
 type Hit = { id: string; x: number; y: number };
+
+const SUB_BIN_MINUTES = 15;
+const MAX_VISIBLE_FLIGHTS = 64;
+const TOP_RISK_COUNT = 3;
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
+
+function interpolateFlightFrame(
+  current: FlightPosition[],
+  next: FlightPosition[] | undefined,
+  factor: number
+) {
+  if (!next || factor <= 0) return current;
+  const nextById = new Map(next.map((flight) => [flight.flight_id, flight]));
+  return current.map((flight) => {
+    const target = nextById.get(flight.flight_id);
+    if (!target) return flight;
+    return {
+      ...flight,
+      lat: lerp(flight.lat, target.lat, factor),
+      lon: lerp(flight.lon, target.lon, factor),
+      altitude_ft: Math.round(lerp(flight.altitude_ft, target.altitude_ft, factor)),
+      speed_kt: Math.round(lerp(flight.speed_kt, target.speed_kt, factor)),
+      progress_pct:
+        flight.progress_pct != null && target.progress_pct != null
+          ? Math.round(lerp(flight.progress_pct, target.progress_pct, factor) * 10) / 10
+          : flight.progress_pct,
+    };
+  });
+}
+
+function polygonCenter(points: number[][]) {
+  if (points.length === 0) return null;
+  const sum = points.reduce(
+    (acc, point) => ({ lon: acc.lon + point[0], lat: acc.lat + point[1] }),
+    { lon: 0, lat: 0 }
+  );
+  return { lon: sum.lon / points.length, lat: sum.lat / points.length };
+}
+
+function addUniqueFlight(
+  output: FlightPosition[],
+  used: Set<string>,
+  flight: FlightPosition | undefined
+) {
+  if (!flight || used.has(flight.flight_id) || output.length >= MAX_VISIBLE_FLIGHTS) return;
+  used.add(flight.flight_id);
+  output.push(flight);
+}
+
+function evenlySampleFlights(flights: FlightPosition[], count: number) {
+  if (count <= 0) return [];
+  if (flights.length <= count) return flights;
+  if (count === 1) return [flights[Math.floor(flights.length / 2)]];
+  const sampled: FlightPosition[] = [];
+  const seen = new Set<string>();
+  const step = (flights.length - 1) / (count - 1);
+  for (let i = 0; i < count; i += 1) {
+    const flight = flights[Math.round(i * step)];
+    if (flight && !seen.has(flight.flight_id)) {
+      seen.add(flight.flight_id);
+      sampled.push(flight);
+    }
+  }
+  for (const flight of flights) {
+    if (sampled.length >= count) break;
+    if (!seen.has(flight.flight_id)) {
+      seen.add(flight.flight_id);
+      sampled.push(flight);
+    }
+  }
+  return sampled;
+}
+
+function curateFlightsForRadar({
+  flights,
+  conflictIds,
+  riskContributorIds,
+  selectedFlightId,
+}: {
+  flights: FlightPosition[];
+  conflictIds: Set<string>;
+  riskContributorIds: Set<string>;
+  selectedFlightId: string | null;
+}) {
+  const byId = new Map(flights.map((flight) => [flight.flight_id, flight]));
+  const output: FlightPosition[] = [];
+  const used = new Set<string>();
+
+  addUniqueFlight(output, used, selectedFlightId ? byId.get(selectedFlightId) : undefined);
+
+  for (const flight of flights) {
+    if (conflictIds.has(flight.flight_id)) addUniqueFlight(output, used, flight);
+  }
+  for (const flight of flights) {
+    if (riskContributorIds.has(flight.flight_id)) addUniqueFlight(output, used, flight);
+  }
+
+  const remaining = flights.filter((flight) => !used.has(flight.flight_id));
+  for (const flight of evenlySampleFlights(remaining, MAX_VISIBLE_FLIGHTS - output.length)) {
+    addUniqueFlight(output, used, flight);
+  }
+
+  return output;
+}
 
 // Geographic -> radar scope. North up, bounding box scaled to fit inside the circle.
 function radarProject(lon: number, lat: number, cx: number, cy: number, R: number) {
@@ -73,8 +186,11 @@ export default function RadarMap() {
 
   const {
     state,
+    nextState,
+    summary,
     stateStatus,
     layers,
+    timeWarpControls,
     selectedFlightId,
     selectedTowerId,
     mapInspection,
@@ -86,6 +202,79 @@ export default function RadarMap() {
     loadFlightDetail,
     clearInspection,
   } = useStore();
+
+  const allVisibleFlights = useMemo(() => {
+    const factor =
+      timeWarpControls.subBinMotion && nextState
+        ? timeWarpControls.subBinOffsetMinutes / SUB_BIN_MINUTES
+        : 0;
+    return interpolateFlightFrame(state?.flights ?? [], nextState?.flights, factor).filter((flight) =>
+      altitudeMatchesLens(flight.altitude_ft, timeWarpControls.altitudeLens)
+    );
+  }, [
+    nextState,
+    state,
+    timeWarpControls.altitudeLens,
+    timeWarpControls.subBinMotion,
+    timeWarpControls.subBinOffsetMinutes,
+  ]);
+
+  const displayConflicts = useMemo(
+    () =>
+      (state?.weather_conflicts ?? []).filter(
+        (conflict) =>
+          conflict.refc_dbz >= timeWarpControls.weatherDbzThreshold &&
+          altitudeMatchesLens(conflict.altitude_ft, timeWarpControls.altitudeLens)
+      ),
+    [state, timeWarpControls.altitudeLens, timeWarpControls.weatherDbzThreshold]
+  );
+
+  const visibleSectorOccupancy = useMemo(
+    () =>
+      (state?.sector_occupancy ?? []).filter(
+        (sector) =>
+          timeWarpControls.altitudeLens === "ALL" ||
+          sector.altitude_band === timeWarpControls.altitudeLens
+      ),
+    [state, timeWarpControls.altitudeLens]
+  );
+
+  const riskContributorIds = useMemo(() => {
+    const ids = new Set<string>();
+    const topRisks = filterRisksForControls(state?.risks ?? [], timeWarpControls).slice(
+      0,
+      TOP_RISK_COUNT
+    );
+    for (const risk of topRisks) {
+      const sector = state?.sector_occupancy.find((item) => item.sector_id === risk.sector_id);
+      for (const flightId of sector?.contributing_flight_ids ?? []) ids.add(flightId);
+    }
+    return ids;
+  }, [state, timeWarpControls]);
+
+  const displayConflictIds = useMemo(
+    () => new Set(displayConflicts.map((conflict) => conflict.flight_id)),
+    [displayConflicts]
+  );
+
+  const radarFlights = useMemo(
+    () =>
+      curateFlightsForRadar({
+        flights: allVisibleFlights,
+        conflictIds: displayConflictIds,
+        riskContributorIds,
+        selectedFlightId,
+      }),
+    [allVisibleFlights, displayConflictIds, riskContributorIds, selectedFlightId]
+  );
+
+  const sectorFeatures = useMemo(() => {
+    const byName = new Map<string, SectorFeature>();
+    for (const feature of summary?.sectors.features ?? []) {
+      byName.set(feature.properties.name, feature);
+    }
+    return byName;
+  }, [summary]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -99,7 +288,7 @@ export default function RadarMap() {
 
     const towersFromFlights = (): { icao: string; lon: number; lat: number }[] => {
       const set = new Set<string>();
-      for (const f of state?.flights ?? []) {
+      for (const f of radarFlights) {
         if (AIRPORTS[f.origin]) set.add(f.origin);
         if (AIRPORTS[f.destination]) set.add(f.destination);
       }
@@ -169,22 +358,12 @@ export default function RadarMap() {
 
       // Sweep beam
       sweep.current = (sweep.current + 0.012) % (Math.PI * 2);
-      const grad = ctx.createConicGradient
-        ? ctx.createConicGradient(sweep.current - 0.5, cx, cy)
-        : null;
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, R, sweep.current - 0.45, sweep.current);
       ctx.closePath();
-      if (grad) {
-        grad.addColorStop(0, "rgba(47,224,106,0)");
-        grad.addColorStop(0.08, "rgba(47,224,106,0.28)");
-        grad.addColorStop(0.1, "rgba(47,224,106,0)");
-        ctx.fillStyle = grad;
-      } else {
-        ctx.fillStyle = "rgba(47,224,106,0.16)";
-      }
+      ctx.fillStyle = "rgba(211,47,47,0.14)";
       ctx.fill();
       ctx.restore();
       // Leading edge line
@@ -200,18 +379,50 @@ export default function RadarMap() {
       ctx.arc(cx, cy, R, 0, Math.PI * 2);
       ctx.clip();
 
-      const conflictIds = new Set((state?.weather_conflicts ?? []).map((c) => c.flight_id));
+      // Sector heat, driven by real occupancy rows and the operator threshold.
+      const sectorFloor = Math.max(0, timeWarpControls.capacityThresholdPct - 15);
+      for (const sector of visibleSectorOccupancy) {
+        if (sector.utilization_pct < sectorFloor) continue;
+        const feature = sectorFeatures.get(sector.sector_id);
+        const ring = feature?.geometry.coordinates[0];
+        if (!ring || ring.length === 0) continue;
+        ctx.beginPath();
+        ring.forEach((point, i) => {
+          const projected = radarProject(point[0], point[1], cx, cy, R);
+          if (i === 0) ctx.moveTo(projected.x, projected.y);
+          else ctx.lineTo(projected.x, projected.y);
+        });
+        ctx.closePath();
+        const breach = sector.utilization_pct >= timeWarpControls.capacityThresholdPct;
+        ctx.fillStyle = breach ? "rgba(211,47,47,0.16)" : "rgba(255,255,255,0.04)";
+        ctx.strokeStyle = breach ? "rgba(211,47,47,0.88)" : "rgba(255,255,255,0.22)";
+        ctx.lineWidth = breach ? 1.6 : 1;
+        ctx.fill();
+        ctx.stroke();
+        if (layers.labels && breach) {
+          const center = polygonCenter(ring);
+          if (center) {
+            const p = radarProject(center.lon, center.lat, cx, cy, R);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "9px ui-monospace, Menlo, monospace";
+            ctx.textAlign = "center";
+            ctx.fillText(`${sector.sector_id} ${Math.round(sector.utilization_pct)}%`, p.x, p.y);
+          }
+        }
+      }
 
       // Weather cells
       if (layers.weather) {
+        const tilePoints = state?.weather_tiles?.flatMap((tile) => tile.points ?? []) ?? [];
         const weatherPoints =
-          state?.weather_tiles?.[0]?.points ??
-          (state?.weather_conflicts ?? []).map((c) => ({
-            lat: c.lat,
-            lon: c.lon,
-            refc_dbz: c.refc_dbz,
-            retop_ft: c.retop_ft,
-          }));
+          tilePoints.length > 0
+            ? tilePoints.filter((p) => p.refc_dbz >= timeWarpControls.weatherDbzThreshold)
+            : displayConflicts.map((c) => ({
+                lat: c.lat,
+                lon: c.lon,
+                refc_dbz: c.refc_dbz,
+                retop_ft: c.retop_ft,
+              }));
         for (const p of weatherPoints) {
           const { x, y } = radarProject(p.lon, p.lat, cx, cy, R);
           const a = Math.max(0.12, Math.min(0.5, (p.refc_dbz - 30) / 50));
@@ -244,7 +455,7 @@ export default function RadarMap() {
       // Flights
       flightHits.current = [];
       if (layers.flights) {
-        for (const f of state?.flights ?? []) {
+        for (const f of radarFlights) {
           const { x, y } = radarProject(f.lon, f.lat, cx, cy, R);
           flightHits.current.push({ id: f.flight_id, x, y });
 
@@ -255,7 +466,7 @@ export default function RadarMap() {
             const d = radarProject(dest.lon, dest.lat, cx, cy, R);
             angle = Math.atan2(d.y - y, d.x - x) + Math.PI / 2;
           }
-          const conflict = conflictIds.has(f.flight_id);
+          const conflict = displayConflictIds.has(f.flight_id);
           const selected = f.flight_id === selectedFlightId;
           const color = selected ? "#ffffff" : conflict ? "#ff5a5a" : GREEN;
           ctx.save();
@@ -278,7 +489,18 @@ export default function RadarMap() {
 
     raf.current = requestAnimationFrame(render);
     return () => cancelAnimationFrame(raf.current);
-  }, [state, layers, selectedFlightId, selectedTowerId]);
+  }, [
+    displayConflicts,
+    displayConflictIds,
+    layers,
+    radarFlights,
+    sectorFeatures,
+    selectedFlightId,
+    selectedTowerId,
+    timeWarpControls.capacityThresholdPct,
+    timeWarpControls.weatherDbzThreshold,
+    visibleSectorOccupancy,
+  ]);
 
   const onClick = (e: React.MouseEvent) => {
     const container = containerRef.current;
@@ -314,7 +536,7 @@ export default function RadarMap() {
     }
   };
 
-  const selFlight = state?.flights.find((f) => f.flight_id === selectedFlightId) ?? null;
+  const selFlight = radarFlights.find((f) => f.flight_id === selectedFlightId) ?? null;
   const selTower = selectedTowerId ? AIRPORTS[selectedTowerId] : null;
 
   return (
@@ -322,6 +544,12 @@ export default function RadarMap() {
       <canvas ref={canvasRef} className="map-canvas" onClick={onClick} />
 
       <LayerControls />
+
+      {allVisibleFlights.length > radarFlights.length && (
+        <div className="radar-track-count monospace">
+          Focused: {radarFlights.length} of {allVisibleFlights.length} planes
+        </div>
+      )}
 
       {selFlight && (
         <FlightCard
@@ -338,16 +566,16 @@ export default function RadarMap() {
         <TowerCard
           icao={selTower.icao}
           flightCount={
-            state?.flights.filter(
+            radarFlights.filter(
               (f) => f.origin === selTower.icao || f.destination === selTower.icao
-            ).length ?? 0
+            ).length
           }
           onClose={() => selectTower(null)}
         />
       )}
 
       {stateStatus.loading && (
-        <div className="radar-loading monospace">[ acquiring tracks… ]</div>
+        <div className="radar-loading monospace">[ loading radar data... ]</div>
       )}
       {mapInspection && (
         <InspectionCard inspection={mapInspection} onClose={clearInspection} />
@@ -368,13 +596,11 @@ function FlightCard({
   onClose: () => void;
 }) {
   return (
-    <div className="radar-card">
-      <div className="info-block-row">
-        <strong>{flightDisplayName(f.flight_number)}</strong>
-        <button className="ghost-btn radar-card-x" onClick={onClose}>
-          ✕
-        </button>
-      </div>
+    <DraggablePanel
+      panelKey={`flight:${f.flight_id}`}
+      title={flightDisplayName(f.flight_number)}
+      onClose={onClose}
+    >
       <div className="text-dim monospace" style={{ marginBottom: 6 }}>
         {f.flight_number}
       </div>
@@ -384,17 +610,17 @@ function FlightCard({
       <div className="text-dim monospace" style={{ marginTop: 6 }}>
         {f.origin} → {f.destination}
         <br />
-        FL{Math.round(f.altitude_ft / 100)} · {f.speed_kt} KT
+        {f.altitude_ft.toLocaleString()} ft · {f.speed_kt} kt
       </div>
       {loading && <div className="text-dim monospace" style={{ marginTop: 8 }}>[ inspecting flight… ]</div>}
       {detail && (
         <div className="text-dim monospace" style={{ marginTop: 8 }}>
-          Sector {detail.sector_id ?? "outside sector"}
+          Airspace {detail.sector_id ?? "outside monitored area"}
           <br />
-          WX {detail.weather.severity.toUpperCase()} · {detail.route.length} route pts
+          Storm {detail.weather.severity.toUpperCase()} · {detail.route.length} route pts
         </div>
       )}
-    </div>
+    </DraggablePanel>
   );
 }
 
@@ -407,24 +633,23 @@ function InspectionCard({
 }) {
   const sector = inspection.sectors[0];
   return (
-    <div className="radar-card" style={{ left: 18, right: "auto" }}>
-      <div className="info-block-row">
-        <strong>Scope Inspect</strong>
-        <button className="ghost-btn radar-card-x" onClick={onClose}>
-          ✕
-        </button>
-      </div>
+    <DraggablePanel
+      panelKey={`inspect:${inspection.location.lat.toFixed(3)}:${inspection.location.lon.toFixed(3)}`}
+      title="Map Details"
+      placement="bottom-left"
+      onClose={onClose}
+    >
       <p className="text-dim" style={{ marginTop: 6 }}>
         {inspection.narrative}
       </p>
       <div className="text-dim monospace" style={{ marginTop: 8 }}>
         {sector ? `${sector.sector_id} · ${Math.round(sector.utilization_pct)}%` : "No sector"}
         <br />
-        WX {inspection.weather.severity.toUpperCase()}
+        Storm {inspection.weather.severity.toUpperCase()}
         <br />
         {inspection.nearby_flights.length} nearby flights
       </div>
-    </div>
+    </DraggablePanel>
   );
 }
 
@@ -438,21 +663,15 @@ function TowerCard({
   onClose: () => void;
 }) {
   return (
-    <div className="radar-card">
-      <div className="info-block-row">
-        <strong>{icao}</strong>
-        <button className="ghost-btn radar-card-x" onClick={onClose}>
-          ✕
-        </button>
-      </div>
+    <DraggablePanel panelKey={`tower:${icao}`} title={icao} onClose={onClose}>
       <div className="text-dim" style={{ fontSize: 12 }}>
         {airportName(icao)}
       </div>
       <div className="text-dim monospace" style={{ marginTop: 6 }}>
         {airportCity(icao)}
         <br />
-        {flightCount} tracked flights to/from
+        {flightCount} displayed planes to/from
       </div>
-    </div>
+    </DraggablePanel>
   );
 }

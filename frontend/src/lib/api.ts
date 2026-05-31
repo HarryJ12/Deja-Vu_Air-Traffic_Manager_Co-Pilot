@@ -1,5 +1,6 @@
-// Thin API layer. MOCK=true serves local JSON so the app runs with no backend (M1).
-// Flip MOCK to false (or set VITE_USE_BACKEND=1) to hit the real FastAPI at /api.
+// Thin API layer. The console uses the real FastAPI by default so time-warp
+// movement, briefings, and risk queues stay synced to the bundle. Set
+// VITE_USE_MOCK=1 for mock-only frontend work.
 
 import type {
   ScenarioListResponse,
@@ -20,6 +21,8 @@ import type {
   VoiceSynthesisRequest,
   VoiceSynthesisResponse,
   VoiceTranscriptionResponse,
+  AgentName,
+  ChatMessage,
 } from "./types";
 
 import scenariosMock from "../data/mock/scenarios.json";
@@ -29,10 +32,76 @@ import briefingMock from "../data/mock/briefing.json";
 import previewMock from "../data/mock/action-preview.json";
 import meetingRoomMock from "../data/mock/meeting-room.json";
 
-export const MOCK = import.meta.env.VITE_USE_BACKEND !== "1";
+export const MOCK =
+  import.meta.env.VITE_USE_MOCK === "1" && import.meta.env.VITE_USE_BACKEND !== "1";
 
 // Simulate network latency so loading/skeleton states are visible in the demo.
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const ROOM_AGENT_ORDER: AgentName[] = [
+  "Jarvis",
+  "Air Marshal",
+  "Weather Boy",
+  "Domino",
+  "Risko",
+  "Historian",
+];
+
+async function responseError(res: Response, method: string, path: string) {
+  const raw = await res.text().catch(() => "");
+  let detail = raw;
+  try {
+    const parsed = JSON.parse(raw) as { detail?: unknown; message?: unknown };
+    detail = String(parsed.detail ?? parsed.message ?? raw);
+  } catch {
+    detail = raw;
+  }
+  const suffix = detail ? `: ${detail}` : "";
+  return new Error(`${method} ${path} failed: ${res.status}${suffix}`);
+}
+
+function mockMeetingRoomResponse(req: MeetingRoomChatRequest): ChatResponse {
+  const base = meetingRoomMock as ChatResponse;
+  const requested = req.requested_agents?.length ? req.requested_agents : ROOM_AGENT_ORDER;
+  const byAgent = new Map(
+    base.messages
+      .filter((message): message is ChatMessage & { agent: AgentName } => message.role === "agent" && !!message.agent)
+      .map((message) => [message.agent, message])
+  );
+  const messages: ChatMessage[] = [
+    {
+      role: "operator",
+      agent: null,
+      content: req.message,
+      severity: "info",
+      voice_id: null,
+      source: "operator_mock",
+    },
+  ];
+
+  requested.forEach((agent) => {
+    const template = byAgent.get(agent);
+    if (!template) return;
+    messages.push({
+      ...template,
+      content:
+        agent === "Jarvis"
+          ? `Room check on "${req.message}". ${template.content}`
+          : template.content,
+      source: agent === "Jarvis" ? "moderator_mock" : "agent_mock",
+    });
+  });
+
+  if (!req.requested_agents?.length) {
+    messages.push({
+      ...(byAgent.get("Jarvis") as ChatMessage),
+      content: "Consensus: open the recommended action preview, then watch the adjacent-sector load before approving.",
+      source: "moderator_synthesis_mock",
+    });
+  }
+
+  return { ...base, messages, note: "Mock meeting room conversation." };
+}
 
 async function get<T>(path: string, mock: T, ms = 350): Promise<T> {
   if (MOCK) {
@@ -40,7 +109,7 @@ async function get<T>(path: string, mock: T, ms = 350): Promise<T> {
     return mock;
   }
   const res = await fetch(`/api${path}`);
-  if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
+  if (!res.ok) throw await responseError(res, "GET", path);
   return (await res.json()) as T;
 }
 
@@ -54,7 +123,7 @@ async function post<T>(path: string, body: unknown, mock: T, ms = 600): Promise<
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
+  if (!res.ok) throw await responseError(res, "POST", path);
   return (await res.json()) as T;
 }
 
@@ -64,7 +133,7 @@ async function postLiveJson<T>(path: string, body: unknown): Promise<T> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
+  if (!res.ok) throw await responseError(res, "POST", path);
   return (await res.json()) as T;
 }
 
@@ -73,7 +142,7 @@ async function postLiveForm<T>(path: string, form: FormData): Promise<T> {
     method: "POST",
     body: form,
   });
-  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
+  if (!res.ok) throw await responseError(res, "POST", path);
   return (await res.json()) as T;
 }
 
@@ -175,6 +244,17 @@ export const api = {
           responsibilities: ["delay proxy", "downstream pressure", "arrival bank impact"],
         },
         {
+          agent: "Risko",
+          role: "Confidence guardrail",
+          short_label: "RK",
+          default_room: "meeting_room",
+          can_speak_in_default: false,
+          meeting_room_only: true,
+          voice_id: "IRHApOXLvnW57QJPQH2P",
+          default_position: { x: 0.72, y: 0.66 },
+          responsibilities: ["confidence drift", "data caveats", "divergence warnings"],
+        },
+        {
           agent: "Historian",
           role: "Precedent memory",
           short_label: "H",
@@ -182,19 +262,21 @@ export const api = {
           can_speak_in_default: false,
           meeting_room_only: true,
           voice_id: "Ybqj6CIlqb6M85s9Bl4n",
-          default_position: { x: 0.72, y: 0.66 },
+          default_position: { x: 0.72, y: 0.8 },
           responsibilities: ["similar scenarios", "mock outcomes", "supporting evidence"],
         },
       ],
       note: "Jarvis is the default-mode speaker. Specialist agents speak in the meeting room.",
     } as AgentRosterResponse),
 
-  meetingRoomChat: (req: MeetingRoomChatRequest) =>
-    post<ChatResponse>(
-      "/chat/meeting-room",
-      req,
-      meetingRoomMock as ChatResponse
-    ),
+  meetingRoomChat: (req: MeetingRoomChatRequest, forceLive = false) =>
+    forceLive
+      ? postLiveJson<ChatResponse>("/chat/meeting-room", req)
+      : post<ChatResponse>(
+          "/chat/meeting-room",
+          req,
+          mockMeetingRoomResponse(req)
+        ),
 
   jarvisChat: (req: ChatRequest) =>
     postLiveJson<ChatResponse>("/chat/jarvis", req),

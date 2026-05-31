@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 AltitudeBand = Literal["LOW", "HIGH"]
 Severity = Literal["info", "watch", "alert"]
-AgentName = Literal["Jarvis", "Weather Boy", "Air Marshal", "Domino", "Historian"]
+AgentName = Literal["Jarvis", "Weather Boy", "Air Marshal", "Domino", "Risko", "Historian"]
 
 
 class Scenario(BaseModel):
@@ -268,6 +268,11 @@ class VoiceSynthesisResponse(BaseModel):
     content_type: str
     audio_base64: str | None = None
     message: str
+    agent: AgentName
+    voice_id: str
+    is_playable: bool
+    audio_bytes: int = 0
+    error_code: str | None = None
 
 
 class VoiceTranscriptionResponse(BaseModel):
@@ -286,6 +291,7 @@ class ChatRequest(BaseModel):
 
 class MeetingRoomChatRequest(ChatRequest):
     requested_agents: list[AgentName] | None = None
+    history: list["ChatMessage"] | None = None
 
 
 class ChatMessage(BaseModel):

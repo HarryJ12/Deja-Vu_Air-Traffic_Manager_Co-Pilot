@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { useStore } from "../state/store";
 import { pct, signedMinutes } from "../lib/format";
+
+type PendingDecision = "accept" | "modify" | "reject";
 
 export default function ActionCards() {
   const {
@@ -11,6 +14,11 @@ export default function ActionCards() {
     decideAction,
     clearPreview,
   } = useStore();
+  const [pendingPreviewId, setPendingPreviewId] = useState<string | null>(null);
+  const [pendingDecision, setPendingDecision] = useState<{
+    id: string;
+    decision: PendingDecision;
+  } | null>(null);
 
   if (!briefing || briefing.recommendations.length === 0) return null;
 
@@ -19,32 +27,51 @@ export default function ActionCards() {
       <h2 style={{ marginTop: 8 }}>Recommended Action</h2>
       {briefing.recommendations.map((rec) => {
         const showingPreview = preview?.recommendation_id === rec.id;
+        const previewing = previewStatus.loading && pendingPreviewId === rec.id;
+        const deciding = actionStatus.loading && pendingDecision?.id === rec.id;
+        const decisionLabel = (decision: PendingDecision, label: string, loading: string) =>
+          deciding && pendingDecision?.decision === decision ? loading : label;
+        const runPreview = async () => {
+          setPendingPreviewId(rec.id);
+          try {
+            await previewAction(rec.id);
+          } finally {
+            setPendingPreviewId(null);
+          }
+        };
+        const runDecision = async (decision: PendingDecision, note?: string) => {
+          setPendingDecision({ id: rec.id, decision });
+          if (decision === "reject") clearPreview();
+          try {
+            await decideAction(rec.id, decision, note);
+          } finally {
+            setPendingDecision(null);
+          }
+        };
+
         return (
-          <div className="info-block" key={rec.id}>
+          <div className="info-block action-card" key={rec.id}>
             <div className="info-block-row">
-              <strong>{rec.title}</strong>
+              <strong className="action-title">{rec.title}</strong>
             </div>
             <div className="info-block-row text-dim monospace">
               <span>Confidence</span>
               <span>{pct(rec.confidence_pct)}</span>
             </div>
-            <p className="text-dim" style={{ marginTop: 8 }}>
+            <p className="text-dim action-copy">
               {rec.summary}
             </p>
-            <p className="text-dim" style={{ marginTop: 8 }}>
+            <p className="text-dim action-copy">
               Expected impact: {rec.expected_impact}
             </p>
             {rec.risks.length > 0 && (
-              <p className="text-dim" style={{ marginTop: 8 }}>
+              <p className="text-dim action-copy">
                 <strong>Operational risks:</strong> {rec.risks.join(" ")}
               </p>
             )}
 
             {showingPreview && (
-              <div
-                className="info-block"
-                style={{ marginTop: 12, borderLeft: "2px solid var(--accent-red)" }}
-              >
+              <div className="info-block action-preview">
                 <h3>Preview · forecast simulation</h3>
                 <div className="info-block-row monospace">
                   <span className="text-dim">Max utilization</span>
@@ -75,47 +102,47 @@ export default function ActionCards() {
               </div>
             )}
 
-            <div className="btn-group">
+            <div className="action-button-grid" aria-busy={previewing || deciding}>
               <button
                 className="btn"
-                onClick={() => {
-                  clearPreview();
-                  decideAction(rec.id, "reject");
-                }}
+                disabled={actionStatus.loading}
+                onClick={() => void runDecision("reject")}
               >
-                Reject
+                {decisionLabel("reject", "Reject", "Rejecting...")}
               </button>
               <button
                 className="btn"
                 disabled={actionStatus.loading}
-                onClick={() => decideAction(rec.id, "modify", `Modify ${rec.title}`)}
+                onClick={() => void runDecision("modify", `Modify ${rec.title}`)}
               >
-                Modify
+                {decisionLabel("modify", "Modify", "Modifying...")}
               </button>
               <button
                 className="btn primary"
                 disabled={previewStatus.loading}
-                onClick={() => previewAction(rec.id)}
+                onClick={() => void runPreview()}
               >
-                {previewStatus.loading ? "Simulating…" : showingPreview ? "Re-run" : "Preview"}
+                {previewing ? "Simulating..." : showingPreview ? "Re-run" : "Preview"}
               </button>
               <button
                 className="btn primary"
                 disabled={actionStatus.loading}
-                onClick={() => decideAction(rec.id, "accept")}
+                onClick={() => void runDecision("accept")}
               >
-                Accept
+                {decisionLabel("accept", "Accept", "Accepting...")}
               </button>
             </div>
             {previewStatus.error && (
-              <p className="text-accent monospace" style={{ marginTop: 8 }}>
-                Preview failed: {previewStatus.error}
-              </p>
+              <details className="action-error">
+                <summary>Preview failed</summary>
+                <span>{previewStatus.error}</span>
+              </details>
             )}
             {actionStatus.error && (
-              <p className="text-accent monospace" style={{ marginTop: 8 }}>
-                Action failed: {actionStatus.error}
-              </p>
+              <details className="action-error">
+                <summary>Action failed</summary>
+                <span>{actionStatus.error}</span>
+              </details>
             )}
           </div>
         );

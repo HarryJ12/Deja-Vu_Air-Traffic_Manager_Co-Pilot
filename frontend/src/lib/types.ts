@@ -10,6 +10,7 @@ export type AgentName =
   | "Weather Boy"
   | "Air Marshal"
   | "Domino"
+  | "Risko"
   | "Historian";
 
 export type ActionType =
@@ -300,6 +301,7 @@ export type ChatRequest = {
 
 export type MeetingRoomChatRequest = ChatRequest & {
   requested_agents?: AgentName[];
+  history?: ChatMessage[];
 };
 
 export type ChatMessage = {
@@ -355,4 +357,9 @@ export type VoiceSynthesisResponse = {
   content_type: string;
   audio_base64: string | null;
   message: string;
+  agent: AgentName;
+  voice_id: string;
+  is_playable: boolean;
+  audio_bytes: number;
+  error_code: string | null;
 };

@@ -24,7 +24,11 @@ def _load_dotenv() -> None:
 class Settings:
     data_bundle_path: Path | None
     openai_api_key: str | None
+    openai_chat_model: str
     anthropic_api_key: str | None
+    anthropic_model: str
+    xai_api_key: str | None
+    xai_model: str
     elevenlabs_api_key: str | None
     openai_transcription_model: str
     agent_voice_ids: dict[str, str]
@@ -38,8 +42,16 @@ class Settings:
         return bool(self.openai_api_key) and not self.use_mock_transcription
 
     @property
+    def has_openai_chat(self) -> bool:
+        return bool(self.openai_api_key) and not self.use_mock_llm
+
+    @property
     def has_anthropic(self) -> bool:
         return bool(self.anthropic_api_key) and not self.use_mock_llm
+
+    @property
+    def has_xai(self) -> bool:
+        return bool(self.xai_api_key) and not self.use_mock_llm
 
     @property
     def has_elevenlabs(self) -> bool:
@@ -76,13 +88,18 @@ def get_settings() -> Settings:
     return Settings(
         data_bundle_path=discover_data_bundle(),
         openai_api_key=os.getenv("OPENAI_API_KEY"),
+        openai_chat_model=os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
+        anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
+        xai_api_key=os.getenv("GROK_API_KEY") or os.getenv("XAI_API_KEY"),
+        xai_model=os.getenv("XAI_MODEL", "grok-3-mini-fast"),
         elevenlabs_api_key=os.getenv("ELEVENLABS_API_KEY"),
         openai_transcription_model=os.getenv("OPENAI_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe"),
         agent_voice_ids={
             "Jarvis": os.getenv("ELEVENLABS_VOICE_JARVIS", "VtiJxTGG57AFTSQjMlja"),
             "Weather Boy": os.getenv("ELEVENLABS_VOICE_WEATHER_BOY", "FmJ4FDkdrYIKzBTruTkV"),
             "Air Marshal": os.getenv("ELEVENLABS_VOICE_AIR_MARSHAL", "DcLiO3XaUWTu3gyon6hW"),
+            "Risko": os.getenv("ELEVENLABS_VOICE_RISKO", "IRHApOXLvnW57QJPQH2P"),
             "Domino": os.getenv("ELEVENLABS_VOICE_DOMINO", "tnVKC6NjwhdRxoQIfKue"),
             "Historian": os.getenv("ELEVENLABS_VOICE_HISTORIAN", "Ybqj6CIlqb6M85s9Bl4n"),
         },

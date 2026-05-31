@@ -7,8 +7,8 @@ def confidence_block(risk: RiskSummary | None, conflicts: list[WeatherConflict])
     if risk is None:
         return ConfidenceBlock(
             overall_pct=74,
-            support=["No capacity breach or severe route-weather conflict dominates the selected bin."],
-            weaknesses=["Forecast can change as later bins are selected."],
+            support=["Risko sees no dominant capacity breach or severe route-weather conflict in the selected bin."],
+            weaknesses=["Risko caveat: forecast confidence can change as later bins are selected."],
             divergence_alarm=None,
         )
 
@@ -17,7 +17,7 @@ def confidence_block(risk: RiskSummary | None, conflicts: list[WeatherConflict])
     if len(conflicts) >= 8:
         divergence = DivergenceAlarm(
             is_active=True,
-            reason="Weather-conflicted flight count is high enough that historical precedent is less reliable.",
+            reason="Risko flags elevated weather-conflicted flight count, so historical precedent is less reliable.",
             confidence_delta_pct=-9,
         )
         confidence = max(45, confidence - 9)
@@ -25,12 +25,12 @@ def confidence_block(risk: RiskSummary | None, conflicts: list[WeatherConflict])
     return ConfidenceBlock(
         overall_pct=confidence,
         support=[
-            "Sector demand is computed directly from planned routes and sector polygons.",
-            "Weather conflicts use the provided 40 dBZ and echo-top altitude rule.",
+            "Risko support: sector demand is computed directly from planned routes and sector polygons.",
+            "Risko support: Weather Boy conflicts use the provided 40 dBZ and echo-top altitude rule.",
         ],
         weaknesses=[
-            "Historical evidence is mocked from bundled scenarios.",
-            "No aircraft type, runway configuration, winds, or active TMI state is available.",
+            "Risko caveat: Historian evidence is mocked from bundled scenarios.",
+            "Risko caveat: no aircraft type, runway configuration, winds, or active TMI state is available.",
         ],
         divergence_alarm=divergence,
     )

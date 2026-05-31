@@ -9,12 +9,18 @@ import { SkeletonLine } from "./Skeletons";
 // Situation Brief as a draggable token. Collapsed = 1-2 sentence headline.
 // Expands to "detailed" (cause/impact) then "full" (action + confidence).
 export default function BriefToken({ initial, z }: { initial: Pos; z: React.MutableRefObject<number> }) {
-  const { briefing, briefingStatus, openMeetingRoom } = useStore();
+  const { briefing, briefingStatus, state, openMeetingRoom } = useStore();
   const { containerRef, style, handleProps } = useDrag(initial, z);
   const [open, setOpen] = useState(false);
   const [full, setFull] = useState(false);
 
   const alert = briefing?.primary_risk ? briefing.primary_risk.utilization_pct >= 100 : false;
+  const agentNames =
+    briefing?.agents.map((a) => a.agent).join(" + ") ||
+    "Air Marshal + Weather Boy + Domino + Historian";
+  const riskoLine = briefing?.confidence.divergence_alarm?.is_active
+    ? `Risko flags confidence drift: ${briefing.confidence.divergence_alarm.reason}`
+    : "Risko sees no active confidence divergence beyond the listed limitations.";
 
   return (
     <div
@@ -26,6 +32,7 @@ export default function BriefToken({ initial, z }: { initial: Pos; z: React.Muta
         <span className="th-title">
           <span className={`status-dot ${alert ? "alert" : "watch"}`} />
           Situation Brief
+          {state?.time_bin.label && <span className="token-filter-note">{state.time_bin.label}</span>}
         </span>
         <button
           className="th-btn"
@@ -54,6 +61,9 @@ export default function BriefToken({ initial, z }: { initial: Pos; z: React.Muta
           <>
             {/* 1-2 sentence headline, always visible */}
             <p>{briefing.headline}</p>
+            <p className="text-dim synthesis-note">
+              Jarvis synthesis from {agentNames}, with Risko confidence checks. This is a forecast read, not a certified directive.
+            </p>
 
             {!open && (
               <button
@@ -88,6 +98,18 @@ export default function BriefToken({ initial, z }: { initial: Pos; z: React.Muta
                   {briefing.summary}
                 </p>
 
+                <h3 style={{ marginTop: 8 }}>Agent Read</h3>
+                <ul className="agent-synthesis-list">
+                  {briefing.agents.map((agent) => (
+                    <li key={agent.agent}>
+                      <strong>{agent.agent}</strong>: {agent.title}. {agent.detail}
+                    </li>
+                  ))}
+                  <li>
+                    <strong>Risko</strong>: {riskoLine}
+                  </li>
+                </ul>
+
                 <h3 style={{ marginTop: 8 }}>Cause</h3>
                 <ul>
                   {(briefing.primary_risk?.causes ?? []).map((c, i) => (
@@ -100,9 +122,9 @@ export default function BriefToken({ initial, z }: { initial: Pos; z: React.Muta
                   {briefing.primary_risk ? (
                     <>
                       <li>{count(briefing.primary_risk.affected_flight_count)} affected flights.</li>
-                      <li>{minutes(briefing.primary_risk.projected_delay_minutes)} delay (heuristic).</li>
+                      <li>{minutes(briefing.primary_risk.projected_delay_minutes)} downstream delay predicted by Domino's heuristic.</li>
                       <li>
-                        Peak {pct(briefing.primary_risk.utilization_pct)} at{" "}
+                        Air Marshal capacity peak {pct(briefing.primary_risk.utilization_pct)} at{" "}
                         {clockZ(briefing.primary_risk.peak_time)}.
                       </li>
                     </>

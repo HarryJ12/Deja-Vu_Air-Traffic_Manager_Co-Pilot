@@ -25,13 +25,20 @@ export default function ConfidenceBar({ confidence }: { confidence: ConfidenceBl
 
       {confidence.weaknesses.length > 0 && (
         <>
-          <h3 style={{ marginTop: 8 }}>Weaknesses</h3>
+          <h3 style={{ marginTop: 8 }}>Risko Caveats</h3>
           <ul>
             {confidence.weaknesses.map((w, i) => (
               <li key={i}>{w}</li>
             ))}
           </ul>
         </>
+      )}
+
+      {confidence.divergence_alarm?.is_active && (
+        <div className="info-block accent risko-divergence">
+          <strong>Risko divergence</strong>
+          <p className="text-dim">{confidence.divergence_alarm.reason}</p>
+        </div>
       )}
     </div>
   );

@@ -3,8 +3,8 @@ import { useStore } from "./state/store";
 import TopBar from "./components/TopBar";
 import RadarMap from "./components/RadarMap";
 import OverlayLayer from "./components/OverlayLayer";
-import Alarm from "./components/Alarm";
 import MeetingRoom from "./components/MeetingRoom";
+import StoryMode from "./components/StoryMode";
 
 export default function App() {
   const init = useStore((s) => s.init);
@@ -26,12 +26,12 @@ export default function App() {
       ) : (
         <div className="stage">
           <RadarMap />
-          <Alarm />
           <OverlayLayer />
         </div>
       )}
 
       <MeetingRoom />
+      {!scenariosError && <StoryMode />}
 
       {toast && <div className="toast">{toast.message}</div>}
     </div>
