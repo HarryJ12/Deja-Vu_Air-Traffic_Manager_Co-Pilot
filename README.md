@@ -296,14 +296,6 @@ npm run build
 
 ---
 
-## Deployment Notes
-
-- Backend is a FastAPI app and should be deployed separately.
-- Set production environment variables in the deployment provider.
-- Do not commit `.env` files or the raw Hackathon Data Bundle.
-
----
-
 ## License
 
 Copyright © 2026 DĒJÅ VŪ Intelligence. All rights reserved.
